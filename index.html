@@ -598,7 +598,8 @@ function ownRoundHTML(){
 function finalHTML(){
   return `<section class="hero"><p class="eyebrow">Vége a játéknak</p><h1 class="title sm">Végeredmény</h1>
     <p class="lede">${S.me.rank}. hely a ${S.me.players} játékosból, ${fmt(S.me.score)} ponttal.</p></section>
-    <section class="card">${podiumHTML()}</section>${boardHTML(10)}`;
+    <section class="card">${podiumHTML()}</section>${boardHTML(10)}
+    <p class="leave"><button class="btn ghost" data-act="leave-yes">Belépés egy új játékba</button></p>`;
 }
 function leaveHTML(){
   if (ui.confirm === "leave") return `<p class="leave">Biztosan kilépsz? Ezzel a névvel nem tudsz visszalépni.
@@ -622,7 +623,7 @@ function renderHost(){
     ${assignHTML()}
     ${S.teams.length ? `<section style="display:grid;gap:12px"><h2 class="h">Csapatok</h2><div class="hteams">${S.teams.map(hostTeamHTML).join("")}</div></section>` : ""}
     ${boardHTML(10)}
-    <section class="card hctl">${ctl}<button class="linkbtn" data-act="h-logout">Kilépés a szervezői nézetből</button></section>`;
+    <section class="card hctl">${ctl}${ui.confirm === "newgame" ? `<span>Új játékot kezdesz? A mostani lezárul, és mindenkinek újra be kell lépnie.</span><button class="btn primary" data-act="h-new">Igen, új játék</button><button class="btn ghost" data-act="confirm-no">Mégse</button>` : `<button class="btn ghost" data-act="ask" data-what="newgame">Új játék indítása</button>`}<button class="linkbtn" data-act="h-logout">Kilépés a szervezői nézetből</button></section>`;
 }
 function runHTML(){
   if (!S.teams.length || S.game.status === "final") return "";
@@ -795,6 +796,7 @@ app.addEventListener("click", async e => {
     case "h-assign": ui.teamN = ui.teamK; await hostAct("kg_host_assign", {p_teams: ui.teamK}); ui.teamN = null; break;
     case "h-run": hostAct("kg_host_run", {}); break;
     case "h-pause": hostAct("kg_host_pause", {}); break;
+    case "h-new": setSess(null); S = null; ui.hostTab = "new"; ui.confirm = null; ui.err = ""; draw(); break;
     case "h-logout": setSess(null); S = null; draw(); break;
   }
 });
