@@ -361,6 +361,11 @@ async function poll(){
     sync(st.now, t0, Date.now());
     if (host === isHost()) S = st;
     $("#net").hidden = true;
+    if (!host && st.game && st.game.status === "final") {
+      const r = await rpc("kg_rejoin", {p_token: s.token});
+      if (r && r.token) { setSess({token: r.token, code: r.code}); S = null; sig = ""; again = true; toast("Új játék indult, már bent is vagy."); }
+      else if (r && r.taken) { setSess(null); S = null; ui.joinNick = r.nick || ""; ui.err = "Új játék indult, de ez a becenév már foglalt benne. Válassz másikat."; }
+    }
   } catch (e) {
     if (e.message === "KILEPTETVE") {
       setSess(null); S = null;
