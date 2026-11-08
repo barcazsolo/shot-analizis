@@ -375,10 +375,10 @@ function qphase(){
   return t < S.game.open_at ? "count" : t <= S.game.close_at ? "vote" : "over";
 }
 function sigData(){
-  const u = [ui.joinTeams, ui.hostTab, ui.err, ui.busy, ui.confirm, ui.choice, ui.choiceRound, ui.uploading];
+  const u = [ui.hostTab, ui.err, ui.busy, ui.confirm, ui.choice, ui.choiceRound, ui.uploading, ui.teamN];
   if (!S) return u;
   const r = S.round ? Object.assign({}, S.round, {answered: 0}) : null;
-  if (isHost()) return [u, S.game, qphase(), S.teams, r, S.board, S.players];
+  if (isHost()) return [u, S.game, qphase(), S.teams, S.lobby, r, S.board, S.players];
   return [u, S.game.status, S.game.open_at, qphase(), S.me, S.team, r, S.board];
 }
 function draw(){
@@ -450,7 +450,7 @@ function podiumHTML(){
 function rulesHTML(){
   return `<details class="card rules"><summary>Hogyan megy a játék, és hogyan jár a pont?</summary>
   <ol>
-    <li>Belépés után megkapod a csapatod titkos megbízását: egy festmény leírását. Az eredetit nem látjátok.</li>
+    <li>Ha mindenki bent van, a játék kisorsolja a csapatokat, és megkapod a csapatod titkos megbízását: egy festmény leírását. Az eredetit nem látjátok.</li>
     <li>Álljatok be a jelenetbe. Egy önként vállalkozó csapattag feltölti a fotót, csapatonként csak ő tud.</li>
     <li>A szervező egyenként indítja a képeket. Mindenki a saját telefonján tippel: a 4 festmény közül melyik volt az eredeti?</li>
   </ol>
@@ -465,10 +465,11 @@ function rulesHTML(){
 
 /* player */
 function renderPlayer(){
-  if (!S) return ui.joinTeams ? joinTeamsHTML() : joinHTML();
+  if (!S) return joinHTML();
   const g = S.game;
   let body;
   if (g.status === "final") body = finalHTML();
+  else if (!S.team) body = lobbyHTML();
   else if ((g.status === "question" || g.status === "reveal") && S.round) body = S.round.own ? ownRoundHTML() : roundHTML();
   else body = missionHTML();
   return topbarHTML() + body;
@@ -482,7 +483,7 @@ function joinHTML(){
   <form class="card form" data-form="join" novalidate>
     <label class="field"><span>Játékkód</span><input id="j-code" name="code" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" value="${esc(ui.joinCode)}" placeholder="0000"></label>
     <label class="field"><span>Becenév</span><input id="j-nick" name="nick" maxlength="20" autocomplete="nickname" value="${esc(ui.joinNick)}" placeholder="Így látnak a többiek"></label>
-    <button class="btn primary block" ${ui.busy ? "disabled" : ""}>${ui.busy ? "Keresem…" : "Tovább"}</button>
+    <button class="btn primary block" ${ui.busy ? "disabled" : ""}>${ui.busy ? "Belépés…" : "Belépés"}</button>
     ${ui.err ? `<p class="err">${esc(ui.err)}</p>` : ""}
   </form>
   ${rulesHTML()}`;
@@ -496,8 +497,15 @@ function joinTeamsHTML(){
 function topbarHTML(){
   const m = S.me;
   return `<header class="top"><span class="brand">Kocsma<em>galéria</em></span>
-    <span class="who"><b>${esc(m.nick)}</b>${teamChip(S.team.no)}</span>
-    <span class="pts"><b>${fmt(m.score)}</b> pont · ${m.rank}. hely${m.streak > 1 ? ` · <span class="streak">${m.streak}-es sorozat</span>` : ""}</span></header>`;
+    <span class="who"><b>${esc(m.nick)}</b>${S.team ? teamChip(S.team.no) : `<span class="pill">Beosztásra vár</span>`}</span>
+    <span class="pts"><b>${fmt(m.score)}</b> pont${m.rank ? ` · ${m.rank}. hely` : ""}${m.streak > 1 ? ` · <span class="streak">${m.streak}-es sorozat</span>` : ""}</span></header>`;
+}
+function lobbyHTML(){
+  return `<section class="card center" style="padding-block:28px">
+    <p class="eyebrow">Bent vagy</p>
+    <p class="big">Várjuk, hogy a szervező kisorsolja a csapatokat</p>
+    <p class="hint">Eddig ${S.me.players} játékos lépett be. A csapatod és a titkos megbízásod itt jelenik meg, nem kell frissítened.</p>
+  </section>${rulesHTML()}${leaveHTML()}`;
 }
 function missionHTML(){
   const t = S.team;
@@ -602,7 +610,8 @@ function renderHost(){
     </header>
     ${S.round ? hostRoundHTML() : ""}
     ${g.status === "final" ? `<section class="card"><h2 class="h">Végeredmény</h2>${podiumHTML()}</section>` : ""}
-    <section style="display:grid;gap:12px"><h2 class="h">Csapatok</h2><div class="hteams">${S.teams.map(hostTeamHTML).join("")}</div></section>
+    ${assignHTML()}
+    ${S.teams.length ? `<section style="display:grid;gap:12px"><h2 class="h">Csapatok</h2><div class="hteams">${S.teams.map(hostTeamHTML).join("")}</div></section>` : ""}
     ${boardHTML(10)}
     <section class="card hctl">${ctl}<button class="linkbtn" data-act="h-logout">Kilépés a szervezői nézetből</button></section>`;
 }
@@ -622,12 +631,36 @@ function hostRoundHTML(){
     <div class="row">${rev ? `<button class="btn ghost" data-act="h-open">Vissza a beálláshoz</button><span class="hint">Vagy indítsd a következő képet lent.</span>` : `<button class="btn primary" data-act="h-reveal">Felfedés most</button><span class="hint">Lejártkor vagy ha mindenki válaszolt, magától felfedi.</span>`}</div>
   </section>`;
 }
+function memberHTML(m){
+  return `<span class="mem">${esc(m.nick)} <small>${fmt(m.score)}</small>${ui.confirm === "kick:" + m.id
+    ? `<button class="linkbtn bad" data-act="h-kick" data-id="${m.id}">eltávolítod?</button>`
+    : `<button class="x" data-act="ask" data-what="kick:${m.id}" aria-label="${esc(m.nick)} eltávolítása">×</button>`}</span>`;
+}
+function assignHTML(){
+  const n = S.players, assigned = S.teams.length > 0;
+  if (S.game.status !== "open" || S.teams.some(t => t.has_photo || t.played)) return "";
+  const max = Math.max(2, Math.min(10, n));
+  const k = Math.max(2, Math.min(max, ui.teamN ?? (assigned ? S.teams.length : Math.round(n / 4) || 2)));
+  ui.teamK = k;
+  const lobby = S.lobby || [];
+  const go = assigned
+    ? (ui.confirm === "assign"
+        ? `<span>Mindenki új csapatba kerülhet, a vállalt feltöltők törlődnek.</span><button class="btn primary" data-act="h-assign">Igen, újrasorsolom</button><button class="btn ghost" data-act="confirm-no">Mégse</button>`
+        : `<button class="btn ghost" data-act="ask" data-what="assign" ${n < 2 ? "disabled" : ""}>Újrasorsolás</button>`)
+    : `<button class="btn primary" data-act="h-assign" ${n < 2 ? "disabled" : ""}>Csapatok kisorsolása</button>`;
+  return `<section class="card">
+    <h2 class="h">${assigned ? "Újrasorsolás" : "Csapatok beosztása"}</h2>
+    <p>${assigned ? "Amíg egyik csapat sem töltött fel képet, újra kisorsolhatod a csapatokat." : `${n} játékos van bent. Ha mindenki belépett, sorsold ki a csapatokat. Aki később lép be, automatikusan a legkisebb csapatba kerül.`}</p>
+    ${assigned ? "" : `<p class="members">${lobby.map(memberHTML).join("") || `<span class="hint">Még senki nem lépett be. Mutasd meg a kódot vagy a QR-kódot.</span>`}</p>`}
+    <div class="row"><button class="btn ghost" data-act="h-n" data-d="-1" aria-label="Kevesebb csapat" ${k <= 2 ? "disabled" : ""}>−</button><b class="big">${k} csapat</b><button class="btn ghost" data-act="h-n" data-d="1" aria-label="Több csapat" ${k >= max ? "disabled" : ""}>+</button>
+      <span class="hint">${n >= 2 ? `kb. ${(n / k).toFixed(1).replace(".", ",")} fő csapatonként · ${k} kártya és ${k} fotó kerül játékba` : "Legalább 2 játékos kell."}</span></div>
+    <div class="row">${go}</div>
+  </section>`;
+}
 function hostTeamHTML(t){
   const src = t.has_photo ? hostPhoto(t) : null;
   const canStart = t.has_photo && !t.played && (S.game.status === "open" || S.game.status === "reveal");
-  const mem = t.members.map(m => `<span class="mem">${esc(m.nick)} <small>${fmt(m.score)}</small>${ui.confirm === "kick:" + m.id
-      ? `<button class="linkbtn bad" data-act="h-kick" data-id="${m.id}">eltávolítod?</button>`
-      : `<button class="x" data-act="ask" data-what="kick:${m.id}" aria-label="${esc(m.nick)} eltávolítása">×</button>`}</span>`).join("");
+  const mem = t.members.map(memberHTML).join("");
   return `<article class="hteam" style="--tc:${COLORS[(t.no - 1) % 10]}">
     <header class="ht-head">${teamChip(t.no)}<span class="hint">${t.members.length} fő</span>${t.played ? `<span class="pill ok">Szerepelt</span>` : t.has_photo ? `<span class="pill ok">Van kép</span>` : `<span class="pill">Nincs kép</span>`}</header>
     <div class="ht-body">
@@ -653,7 +686,6 @@ function hostLoginHTML(){
   <div class="tabs2"><button data-act="h-tab" data-tab="new" aria-pressed="${ui.hostTab === "new"}">Új játék</button><button data-act="h-tab" data-tab="login" aria-pressed="${ui.hostTab === "login"}">Meglévő játék</button></div>
   ${ui.hostTab === "new" ? `<form class="card form" data-form="create">
       <label class="field"><span>Szervezői jelszó</span><input id="h-pw" name="pw" type="password" autocomplete="current-password"></label>
-      <label class="field"><span>Csapatok száma</span><select id="h-teams" name="teams">${[2,3,4,5,6,7,8,9,10].map(n => `<option ${String(n) === ui.hostTeams ? "selected" : ""}>${n}</option>`).join("")}</select></label>
       <label class="field"><span>Idő képenként</span><select id="h-time" name="time">${[20,30,45,60].map(n => `<option value="${n}" ${String(n) === ui.hostTime ? "selected" : ""}>${n} mp</option>`).join("")}</select></label>
       <button class="btn primary block" ${ui.busy ? "disabled" : ""}>${btxt || "Játék létrehozása"}</button>${err}</form>`
     : `<form class="card form" data-form="hlogin">
@@ -691,12 +723,12 @@ app.addEventListener("submit", e => {
     ui.joinNick = String(fd.get("nick") || "").trim();
     if (ui.joinCode.length !== 4) { ui.err = "A játékkód 4 számjegy."; draw(); return; }
     if (ui.joinNick.length < 2) { ui.err = "Adj meg legalább 2 betűs becenevet."; draw(); return; }
-    formRun(async () => { const r = await rpc("kg_lookup", {p_code: ui.joinCode}); ui.joinTeams = r.teams; });
+    formRun(async () => { const r = await rpc("kg_join", {p_code: ui.joinCode, p_nick: ui.joinNick}); setSess({token: r.token, code: ui.joinCode}); await poll(); });
   }
   if (f === "create") {
-    ui.hostTeams = String(fd.get("teams")); ui.hostTime = String(fd.get("time"));
+    ui.hostTime = String(fd.get("time"));
     formRun(async () => {
-      const r = await rpc("kg_create_game", {p_password: String(fd.get("pw") || ""), p_teams: +ui.hostTeams, p_time: +ui.hostTime});
+      const r = await rpc("kg_create_game", {p_password: String(fd.get("pw") || ""), p_time: +ui.hostTime});
       setSess({token: r.host_token, code: r.code}); await poll();
     });
   }
@@ -740,6 +772,8 @@ app.addEventListener("click", async e => {
     case "h-final": hostAct("kg_host_set", {p_status: "final"}); break;
     case "h-release": hostAct("kg_host_release", {p_team_no: +b.dataset.no}); break;
     case "h-kick": hostAct("kg_host_kick", {p_player: b.dataset.id}); break;
+    case "h-n": ui.teamN = (ui.teamK || 2) + +b.dataset.d; draw(); break;
+    case "h-assign": ui.teamN = ui.teamK; await hostAct("kg_host_assign", {p_teams: ui.teamK}); ui.teamN = null; break;
     case "h-logout": setSess(null); S = null; draw(); break;
   }
 });
