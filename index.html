@@ -430,7 +430,7 @@ function afterRender(){
   }
   if (S && S.round && S.round.options) S.round.options.forEach(id => { const i = new Image(); i.src = pimg(id); });
 }
-function joinUrl(){ return `${location.origin}${location.pathname}`; }
+function joinUrl(){ return `${location.origin}${location.pathname}?j=${S.game.code}`; }
 
 /* shared pieces */
 const teamChip = no => `<span class="chip" style="--tc:${COLORS[(no - 1) % 10]}">${no}. csapat</span>`;
@@ -818,11 +818,6 @@ $("#file").addEventListener("change", async e => {
 });
 
 /* start */
-const qk = new URLSearchParams(location.search).get("kod");
-if (qk && !isHost()) {
-  ui.joinCode = qk.replace(/\D/g, "").slice(0, 4);
-  const s = getSess(); if (s && s.code !== ui.joinCode) setSess(null);
-}
 poll();
 setInterval(() => { if (S) draw(); }, 200);
 </script>
