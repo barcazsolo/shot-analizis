@@ -711,7 +711,7 @@ function renderHost(){
     ${assignHTML()}
     ${S.teams.length ? `<section style="display:grid;gap:12px"><h2 class="h">Csapatok</h2><div class="hteams">${S.teams.map(hostTeamHTML).join("")}</div></section>` : ""}
     ${boardHTML(10)}
-    <section class="card hctl">${ctl}${ui.confirm === "newgame" ? `<span>Új játékot kezdesz? A mostani lezárul, és mindenkinek újra be kell lépnie.</span><button class="btn primary" data-act="h-new">Igen, új játék</button><button class="btn ghost" data-act="confirm-no">Mégse</button>` : `<button class="btn ghost" data-act="ask" data-what="newgame">Új játék indítása</button>`}<button class="linkbtn" data-act="h-logout">Kilépés a szervezői nézetből</button></section>`;
+    <section class="card hctl">${ctl}${S.teams.some(t => t.has_photo) ? `<button class="btn ghost" data-act="h-zip" ${ui.busy ? "disabled" : ""}>${ui.busy ? "Csomagolás…" : "Összes fotó letöltése"}</button>` : ""}${ui.confirm === "newgame" ? `<span>Új játékot kezdesz? A mostani lezárul, és mindenkinek újra be kell lépnie.</span><button class="btn primary" data-act="h-new">Igen, új játék</button><button class="btn ghost" data-act="confirm-no">Mégse</button>` : `<button class="btn ghost" data-act="ask" data-what="newgame">Új játék indítása</button>`}<button class="linkbtn" data-act="h-logout">Kilépés a szervezői nézetből</button></section>`;
 }
 function runHTML(){
   if (!S.teams.length || S.game.status === "final") return "";
@@ -779,6 +779,7 @@ function hostTeamHTML(t){
       <button class="hthumb" data-act="zoom" ${t.has_photo ? "" : "disabled"}>${t.has_photo ? (src ? `<img src="${src}" alt="">` : `<span class="loading">…</span>`) : `<span class="hint">Még nincs fotó</span>`}</button>
       <div class="ht-info">
         <p class="hint">Feltöltő: ${t.uploader ? `<b>${esc(t.uploader)}</b>${t.played ? "" : ` <button class="linkbtn" data-act="h-release" data-no="${t.no}">felszabadítás</button>`}` : "még senki"}</p>
+        ${src ? `<a class="linkbtn" href="${src}" download="shot-analizis-${esc(S.game.code)}-csapat-${t.no}.jpg">Fotó letöltése</a>` : ""}
         ${t.played ? `<p>${t.correct_count} / ${t.eligible_count} eltalálta · +${fmt(t.pose_points)} pont/fő</p>` : ""}
       </div>
     </div>
@@ -803,6 +804,27 @@ function hostLoginHTML(){
       <label class="field"><span>Játékkód</span><input id="h-code" name="code" inputmode="numeric" maxlength="4" value="${esc(ui.hostCode)}"></label>
       <label class="field"><span>Szervezői jelszó</span><input id="h-pw2" name="pw" type="password" autocomplete="current-password"></label>
       <button class="btn primary block" ${ui.busy ? "disabled" : ""}>${btxt || "Belépés"}</button>${err}</form>`}`;
+}
+
+async function zipAll(){
+  if (!window.JSZip) await new Promise((res, rej) => {
+    const sc = document.createElement("script");
+    sc.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+    sc.onload = res; sc.onerror = () => rej(new Error("Nem sikerült betölteni a letöltőt, próbáld újra."));
+    document.head.appendChild(sc);
+  });
+  const zip = new JSZip(); let n = 0;
+  for (const t of S.teams.filter(x => x.has_photo)) {
+    const d = await rpc("kg_host_photo", {p_host: getSess().token, p_team_no: t.no});
+    if (d) { zip.file(`csapat-${t.no}.jpg`, d.split(",")[1], {base64: true}); n++; }
+  }
+  if (!n) throw new Error("Még nincs feltöltött fotó.");
+  const blob = await zip.generateAsync({type: "blob"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = `shot-analizis-${S.game.code}-fotok.zip`;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 3000);
+  toast(`${n} fotó letöltve.`);
 }
 
 /* actions */
@@ -895,6 +917,7 @@ app.addEventListener("click", async e => {
     case "h-run": hostAct("kg_host_run", {}); break;
     case "h-pause": hostAct("kg_host_pause", {}); break;
     case "h-new": setSess(null); S = null; ui.hostTab = "new"; ui.confirm = null; ui.err = ""; draw(); break;
+    case "h-zip": run(zipAll); break;
     case "h-logout": setSess(null); S = null; draw(); break;
   }
 });
