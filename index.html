@@ -5,23 +5,23 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Shot analízis</title>
 <meta name="description" content="Élőkép-játék a szakkolis kocsmatúrára">
-<meta name="theme-color" content="#1b2a8f">
+<meta name="theme-color" content="#cfe6b4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..900;1,9..144,500..800&family=Figtree:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik+Dirt&family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;600;700;800&display=swap">
 <style>
 /* Pop-art gallery party: ultramarine wall, sunflower and pink accents, golden frames, white wall cards. Phone first, one column; the host view opens to a grid. */
 :root{
-  color-scheme:dark;
-  --wall:#1b2a8f; --deep:#121d6b; --raise:#2536a8; --line:#3a4cc0;
-  --brass:#ffd23f; --brass-dim:#ff5d8f;
-  --paper:#fffaf0; --ink:#18205c; --ink-soft:#5a6396;
-  --text:#ffffff; --muted:#c3cbff;
-  --ok:#3ee0b0; --bad:#ff6b6b;
-  --gilt-a:#ffe27a; --gilt-b:#ff9f1c; --gilt-c:#ffd23f; --gilt-d:#e07a00;
-  --f-d:"Fraunces",Georgia,"Times New Roman",serif;
-  --f-b:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --f-m:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+  --wall:#cfe6b4; --deep:#eaf3dc; --raise:#fdf8e7; --line:#1e4a2c;
+  --brass:#f5a524; --brass-dim:#d86f00;
+  --paper:#fffcf0; --ink:#1e4a2c; --ink-soft:#56705f;
+  --text:#1e4a2c; --muted:#56705f;
+  --ok:#2f9e4f; --bad:#d64541;
+  --gilt-a:#f5a524; --gilt-b:#f5a524; --gilt-c:#f5a524; --gilt-d:#1e4a2c;
+  --f-d:"Baloo 2","Nunito",system-ui,sans-serif;
+  --f-b:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-m:"Baloo 2","Nunito",system-ui,sans-serif;
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -223,6 +223,77 @@ img{max-width:100%}
 #lightbox{position:fixed;inset:0;z-index:40;background:rgba(12,18,70,.95);display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));cursor:zoom-out}
 #lightbox img{max-width:100%;max-height:100%;object-fit:contain}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* Poster look, after the Shot-analízis plakát: light green ground, cream cards with a thick dark-green outline and offset shadow, amber pills and number circles. */
+:root{--rule:#b9d39c;--title:"Rubik Dirt","Baloo 2",Impact,sans-serif;--shadow:4px 4px 0 var(--line)}
+body{background:radial-gradient(60% 16% at 8% 20%,#bfdb9f 0 70%,transparent 71%),radial-gradient(55% 14% at 94% 62%,#bfdb9f 0 70%,transparent 71%),var(--wall);font-weight:500}
+.title,.brand{font-family:var(--title);font-weight:400;text-transform:uppercase;letter-spacing:.01em;color:var(--ink)}
+.title em,.brand em{font-style:normal;font-weight:400;color:var(--ink)}
+.title{font-size:clamp(2.5rem,12.5vw,4.6rem)}
+.brand{font-size:1.15rem}
+.research{font-family:var(--f-m);font-weight:800;font-size:1.05rem;color:var(--brass-dim);margin:0;line-height:1.3}
+.research b{color:var(--ink)}
+.eyebrow{display:inline-block;width:fit-content;justify-self:start;background:var(--brass);color:var(--ink);border:2px solid var(--line);border-radius:999px;padding:1px 12px;font-weight:800;letter-spacing:.06em}
+.teamno .eyebrow,.center .eyebrow{justify-self:center}
+.h{font-family:var(--f-m);font-weight:800}
+.card,.paper,.hteam,.joinbox,.orig,.teamno{border:2.5px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.card,.joinbox,.teamno,.hteam{background:var(--raise)}
+.paper,.orig{background:var(--paper)}
+.paper-head{border-bottom:2px dashed var(--line)}
+.desc,.desc-sm{font-family:var(--f-b);font-weight:600}
+.top{border-bottom:2px dashed var(--rule)}
+.btn{border:2.5px solid var(--line);box-shadow:3px 3px 0 var(--line);font-family:var(--f-m);font-weight:800;font-size:1.05rem;transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--line)}
+.btn.primary{background:var(--brass);color:var(--ink)}
+.btn.ghost{background:var(--raise);color:var(--ink)}
+.field input,.field select{background:#fffdf5;border:2px solid var(--line);border-radius:12px;color:var(--ink)}
+.chip{color:var(--ink);background:color-mix(in srgb,var(--tc) 50%,#fffdf5);border:2px solid var(--line);font-family:var(--f-m);font-weight:800}
+.chip::before{background:var(--tc);border:1.5px solid var(--line)}
+.pill{border:2px solid var(--line);color:var(--ink);background:var(--raise)}
+.pill.ok{background:#c9ecc9;color:var(--ink);border-color:var(--line)}
+.tp{border:2.5px solid var(--line);box-shadow:var(--shadow);background:color-mix(in srgb,var(--tc) 45%,#fffdf5)}
+.tp span{color:var(--ink)}
+.teamno b{display:grid;place-items:center;width:9rem;height:9rem;border-radius:50%;background:var(--tc);color:var(--ink);border:3px solid var(--line);font-family:var(--f-m);font-weight:800;font-size:5.5rem;line-height:1;box-shadow:4px 4px 0 var(--line);margin-block:6px}
+.gilt{background:var(--brass);border:3px solid var(--line);border-radius:16px;box-shadow:5px 5px 0 var(--line);padding:8px}
+.gilt img{border:2.5px solid var(--line);border-radius:10px}
+.bar{border:2px solid var(--line);height:14px;background:var(--raise)}
+.bar i{background:repeating-linear-gradient(90deg,var(--brass) 0 14px,#f8c66a 14px 22px)}
+.opt{background:var(--raise);border:2.5px solid var(--line);border-radius:14px;box-shadow:3px 3px 0 var(--line);padding:6px}
+.opt img{border-radius:8px;background:var(--deep)}
+.opt.picked{box-shadow:0 0 0 4px var(--brass),3px 3px 0 var(--line)}
+.opt .cap{color:var(--ink)}
+.opt .cap small{color:var(--muted)}
+.letter{background:var(--brass);color:var(--ink);border:2.5px solid var(--line);font-family:var(--f-m);font-style:normal;box-shadow:none}
+.banner{border:2.5px solid var(--line)!important;box-shadow:var(--shadow);border-radius:18px}
+.banner b{font-family:var(--f-m);font-weight:800}
+.banner.ok{background:#c9ecc9}
+.banner.bad{background:#f8d0cb}
+.banner.own{background:#fde3b0}
+.orig figcaption b{font-family:var(--f-m);font-style:normal;font-weight:800}
+.tag{color:var(--brass-dim);font-weight:800}
+.counts li{background:var(--raise);border:2px solid var(--line);opacity:.85}
+.counts li.ok{box-shadow:inset 0 0 0 3px var(--ok);opacity:1;background:#e3f4e3}
+.counts li.mine:not(.ok){box-shadow:inset 0 0 0 3px var(--bad);opacity:1}
+.counts img{border:1.5px solid var(--line)}
+.cbar{background:var(--deep);border:1.5px solid var(--line)}
+.cbar i{background:var(--muted)}
+.cn,.rank b,.count b,.clock b{font-family:var(--f-m);font-weight:800}
+.count span{font-weight:800;color:var(--brass-dim)}
+.rank li{border-bottom:2px dashed var(--rule)}
+.pod .blk{background:var(--brass);border:2.5px solid var(--line);color:var(--ink);font-family:var(--f-m)}
+.streak{color:var(--brass-dim)}
+.tabs2{background:var(--raise);border:2.5px solid var(--line)}
+.tabs2 button{color:var(--ink);font-family:var(--f-m);font-weight:800}
+.tabs2 button[aria-pressed="true"]{background:var(--brass);color:var(--ink)}
+.hteam{border-top:10px solid var(--tc)}
+.hthumb,.thumb{background:var(--deep);border:2px solid var(--line)}
+.ht-card{border-top:2px dashed var(--rule)}
+.ht-opts figure.ok img{outline:3px solid var(--ok)}
+.qr{background:var(--raise);border:2.5px solid var(--line)}
+.nextbar{background:var(--raise);border-top:2.5px solid var(--line)}
+#toast{background:var(--ink);color:var(--raise)}
+#lightbox{background:rgba(20,50,30,.94)}
+.x{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -279,7 +350,7 @@ const ART = {
   66:["Leonardo da Vinci","Hölgy hermelinnel","1489–91"],
   109:["Johannes Vermeer","Leány gyöngy fülbevalóval","1665 k."]
 };
-const COLORS = ["#ff5d8f","#ffd23f","#3ee0b0","#ff8c42","#4cc9f0","#c77dff","#a3e635","#ff6b6b","#f1f5f9","#ffb4a2"];
+const COLORS = ["#f5a524","#7cc36f","#f28b82","#5bb8d6","#c39bd3","#f6d55c","#e9875a","#9ad1b5","#f4b6c2","#b5c96a"];
 const SUFFIX = {1:"es",2:"es",3:"as",4:"es",5:"ös",6:"os",7:"es",8:"as",9:"es",10:"es"};
 const STATUS = {open:"Beállás", question:"Tippelés", reveal:"Eredmény", final:"Vége"};
 const L = "ABCD";
@@ -430,7 +501,7 @@ function autoReveal(){
 function afterRender(){
   const q = document.getElementById("qr");
   if (q && S && window.QRCode) {
-    try { new QRCode(q, {text: joinUrl(), width: 264, height: 264, colorDark: "#18205c", colorLight: "#ece8dc", correctLevel: QRCode.CorrectLevel.M}); } catch (e) {}
+    try { new QRCode(q, {text: joinUrl(), width: 264, height: 264, colorDark: "#1e4a2c", colorLight: "#fdf8e7", correctLevel: QRCode.CorrectLevel.M}); } catch (e) {}
   }
   if (S && S.round && S.round.options) S.round.options.forEach(id => { const i = new Image(); i.src = pimg(id); });
 }
@@ -493,8 +564,8 @@ function renderPlayer(){
 function joinHTML(){
   const fromQr = ui.qr && !!ui.joinCode;
   return `<section class="hero">
-    <p class="eyebrow">Szakkolis kocsmatúra · élőkép-játék</p>
-    <h1 class="title">Shot <em>analízis</em></h1>
+    <h1 class="title">Shot-<em>analízis</em></h1>
+    <p class="research">research by: <b>Ihrig Károly Szakkollégium</b></p>
     <p class="lede">${fromQr ? "Add meg a beceneved, és már bent is vagy." : "Olvasd be a szervező telefonján lévő QR-kódot. Ha nem megy, írd be az alatta álló 4 jegyű kódot."}</p>
   </section>
   <form class="card form" data-form="join" novalidate>
@@ -513,7 +584,7 @@ function joinTeamsHTML(){
 }
 function topbarHTML(){
   const m = S.me;
-  return `<header class="top"><span class="brand">Shot <em>analízis</em></span>
+  return `<header class="top"><span class="brand">Shot-<em>analízis</em></span>
     <span class="who"><b>${esc(m.nick)}</b>${S.team ? teamChip(S.team.no) : `<span class="pill">Beosztásra vár</span>`}</span>
     <span class="pts"><b>${fmt(m.score)}</b> pont${m.rank ? ` · ${m.rank}. hely` : ""}${m.streak > 1 ? ` · <span class="streak">${m.streak}-es sorozat</span>` : ""}</span></header>`;
 }
@@ -632,7 +703,7 @@ function renderHost(){
     ? `<span>Lezárod a játékot? Utána már nem lehet tippelni.</span><button class="btn primary" data-act="h-final">Igen, vége</button><button class="btn ghost" data-act="confirm-no">Mégse</button>`
     : `<button class="btn ghost" data-act="ask" data-what="final" ${g.status === "question" ? "disabled" : ""}>Játék vége, végeredmény</button>`;
   return `<header class="htop">
-      <div class="hbrand"><span class="brand">Shot <em>analízis</em></span><span class="pill">${STATUS[g.status]}</span><span class="hint">${S.players} játékos</span></div>
+      <div class="hbrand"><span class="brand">Shot-<em>analízis</em></span><span class="pill">${STATUS[g.status]}</span><span class="hint">${S.players} játékos</span></div>
       <div class="joinbox"><div><span class="eyebrow">Belépés QR-kóddal</span><b class="code">${esc(g.code)}</b><span class="hint">Olvassátok be a QR-kódot. Ha nem megy: ${esc(location.host + location.pathname)}, és ez a kód.</span></div><div id="qr" class="qr" aria-label="QR-kód a belépéshez"></div></div>
     </header>
     ${S.round ? hostRoundHTML() : runHTML()}
@@ -722,7 +793,7 @@ function hostTeamHTML(t){
 function hostLoginHTML(){
   const err = ui.err ? `<p class="err">${esc(ui.err)}</p>` : "";
   const btxt = ui.busy ? "Egy pillanat…" : null;
-  return `<section class="hero"><p class="eyebrow">Szervezői felület</p><h1 class="title">Shot <em>analízis</em></h1></section>
+  return `<section class="hero"><p class="eyebrow">Szervezői felület</p><h1 class="title">Shot-<em>analízis</em></h1></section>
   <div class="tabs2"><button data-act="h-tab" data-tab="new" aria-pressed="${ui.hostTab === "new"}">Új játék</button><button data-act="h-tab" data-tab="login" aria-pressed="${ui.hostTab === "login"}">Meglévő játék</button></div>
   ${ui.hostTab === "new" ? `<form class="card form" data-form="create">
       <label class="field"><span>Szervezői jelszó</span><input id="h-pw" name="pw" type="password" autocomplete="current-password"></label>
