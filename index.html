@@ -86,6 +86,11 @@ img{max-width:100%}
 .tp b{font-family:var(--f-d);font-size:2rem;line-height:1}
 .tp span{font-size:.8rem;color:var(--muted)}
 
+/* team number */
+.teamno{display:grid;justify-items:center;gap:4px;text-align:center;padding:20px 18px;border-radius:16px;border:2px solid var(--tc);background:color-mix(in srgb,var(--tc) 18%,var(--raise))}
+.teamno b{font-family:var(--f-d);font-weight:800;font-size:7.5rem;line-height:1;color:var(--tc)}
+.teamno p{margin:0;max-width:36ch}
+
 /* mission card */
 .paper{background:var(--paper);color:var(--ink);border-radius:4px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 12px 28px rgba(0,0,0,.45)}
 .paper-head{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid var(--ink);padding-bottom:8px}
@@ -271,6 +276,7 @@ const ART = {
   109:["Johannes Vermeer","Leány gyöngy fülbevalóval","1665 k."]
 };
 const COLORS = ["#e76f51","#f4a261","#e9c46a","#8ab17d","#2a9d8f","#4cc9f0","#7b8cde","#b388eb","#f28482","#c9a27e"];
+const SUFFIX = {1:"es",2:"es",3:"as",4:"es",5:"ös",6:"os",7:"es",8:"as",9:"es",10:"es"};
 const STATUS = {open:"Beállás", question:"Tippelés", reveal:"Eredmény", final:"Vége"};
 const L = "ABCD";
 const $ = s => document.querySelector(s);
@@ -504,19 +510,21 @@ function lobbyHTML(){
   return `<section class="card center" style="padding-block:28px">
     <p class="eyebrow">Bent vagy</p>
     <p class="big">Várjuk, hogy a szervező kisorsolja a csapatokat</p>
-    <p class="hint">Eddig ${S.me.players} játékos lépett be. A csapatod és a titkos megbízásod itt jelenik meg, nem kell frissítened.</p>
+    <p class="hint">Eddig ${S.me.players} játékos lépett be. Ha a szervező elindítja, kapsz egy számot, és itt jelenik meg a csapatod titkos feladványa is. Nem kell frissítened.</p>
   </section>${rulesHTML()}${leaveHTML()}`;
 }
 function missionHTML(){
   const t = S.team;
-  return `<article class="paper">
+  return `<section class="teamno" style="--tc:${COLORS[(t.no - 1) % 10]}"><span class="eyebrow">A te számod</span><b>${t.no}</b>
+    <p>Keresd meg azokat, akiknek a telefonján szintén a ${t.no}-${SUFFIX[t.no] || "es"} szám áll. Ők a csapatod, és ugyanezt a feladványt kapták.</p></section>
+  <article class="paper">
     <header class="paper-head"><span class="kicker">Titkos megbízás</span>${teamChip(t.no)}</header>
     <p class="desc">${esc(t.description)}</p>
     <dl class="meta"><div><dt>Szereplők</dt><dd>${esc(t.people)}</dd></div><div><dt>Kellékötlet</dt><dd>${esc(t.props)}</dd></div></dl>
     <p class="note">Az eredeti festményt nem kapjátok meg. A leírás alapján álljatok be, és ne áruljátok el a többi csapatnak!</p>
   </article>
   ${uploadHTML()}
-  <section class="card"><h2 class="h">Csapattársak</h2><p class="members">${(t.members || []).map(esc).join("<span class=hint>·</span>")}</p></section>
+  <details class="card rules"><summary>Nem találod őket? Csapattársak (${(t.members || []).length} fő)</summary><p class="members">${(t.members || []).map(esc).join("<span class=hint>·</span>")}</p></details>
   <p class="wait">${t.played ? "A szervező indítja a következő képet." : "Ha minden csapat kész, a szervező elindítja a tippelést."}</p>
   ${rulesHTML()}
   ${leaveHTML()}`;
