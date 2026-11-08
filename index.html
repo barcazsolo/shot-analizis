@@ -123,6 +123,8 @@ img{max-width:100%}
 .opt.picked{box-shadow:0 0 0 3px var(--brass)}
 .opt.dim{opacity:.3}
 .opt[disabled]{cursor:default}
+.opt .cap{display:block;padding:7px 3px 2px;font-size:.82rem;font-weight:600;line-height:1.3;text-align:left;color:var(--text)}
+.opt .cap small{display:block;font-weight:400;color:var(--muted);font-size:.72rem}
 .letter{display:grid;place-items:center;width:2.2rem;height:2.2rem;border-radius:50%;background:var(--brass);color:var(--ink);font-family:var(--f-d);font-style:italic;font-weight:800;font-size:1.25rem;box-shadow:0 2px 6px rgba(0,0,0,.5);flex:none}
 .banner{border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:2px}
 .banner b{font-family:var(--f-d);font-size:1.7rem;line-height:1.15}
@@ -178,7 +180,7 @@ img{max-width:100%}
 .tabs2 button[aria-pressed="true"]{background:var(--brass);color:var(--ink)}
 .round{gap:14px}
 .rgrid{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
-@media (min-width:860px){.rgrid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start}}
+@media (min-width:860px){.opts.host{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .opts.host .opt{cursor:default}
 .hteams{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))}
 .hteam{background:var(--raise);border:1px solid var(--line);border-top:4px solid var(--tc);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -550,7 +552,7 @@ function roundHTML(){
   if (ph === "over" && !voted) return head + roundPhoto(r.team_no) + `<div class="card center"><p class="big">Lejárt az idő</p><p class="hint">Várjuk az eredményt.</p></div>`;
   return head + roundPhoto(r.team_no) + `<div class="bar"><i data-bar></i></div>
     <p class="ask">${voted ? `Leadva: <b>${L[ch]}</b>. Várjuk a többieket…` : "Melyik festmény volt az eredeti?"}</p>
-    <div class="opts">${r.options.map((id, i) => `<button class="opt${voted ? (i === ch ? " picked" : " dim") : ""}" data-act="vote" data-i="${i}" ${voted ? "disabled" : ""} aria-label="${L[i]} válasz"><img src="${pimg(id)}" alt=""><span class="letter">${L[i]}</span></button>`).join("")}</div>
+    <div class="opts">${r.options.map((id, i) => `<button class="opt${voted ? (i === ch ? " picked" : " dim") : ""}" data-act="vote" data-i="${i}" ${voted ? "disabled" : ""} aria-label="${L[i]} válasz"><img src="${pimg(id)}" alt=""><span class="letter">${L[i]}</span><span class="cap">${esc(art(id)[1])}<small>${esc(art(id)[0])}</small></span></button>`).join("")}</div>
     <p class="hint center"><span data-answered></span> válaszolt</p>`;
 }
 function revealHTML(){
@@ -611,7 +613,7 @@ function hostRoundHTML(){
       <button class="gilt" data-act="zoom">${src ? `<img src="${src}" alt="A csapat fotója">` : `<span class="loading">Kép betöltése…</span>`}</button>
       <div style="display:grid;gap:12px">${rev
         ? `${countsHTML(t.options, r.counts, t.answer, null)}<p class="big">${t.correct_count} / ${t.eligible_count} eltalálta</p><p class="hint">A ${r.team_no}. csapat tagjai +${fmt(t.pose_points)} pontot kaptak.</p>`
-        : `<div class="opts host">${t.options.map((id, i) => `<figure class="opt"><img src="${pimg(id)}" alt=""><span class="letter">${L[i]}</span></figure>`).join("")}</div><p class="hint"><span data-answered></span> válaszolt</p>`}</div>
+        : `<div class="opts host">${t.options.map((id, i) => `<figure class="opt"><img src="${pimg(id)}" alt=""><span class="letter">${L[i]}</span><figcaption class="cap">${esc(art(id)[1])}<small>${esc(art(id)[0])}</small></figcaption></figure>`).join("")}</div><p class="hint"><span data-answered></span> válaszolt</p>`}</div>
     </div>
     <div class="row">${rev ? `<button class="btn ghost" data-act="h-open">Vissza a beálláshoz</button><span class="hint">Vagy indítsd a következő képet lent.</span>` : `<button class="btn primary" data-act="h-reveal">Felfedés most</button><span class="hint">Lejártkor vagy ha mindenki válaszolt, magától felfedi.</span>`}</div>
   </section>`;
