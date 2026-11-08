@@ -154,6 +154,10 @@ img{max-width:100%}
 .cn{font-family:var(--f-d);font-weight:700;font-size:1.2rem;font-variant-numeric:tabular-nums}
 .standing{text-align:center;margin:0;font-weight:600}
 
+.nextpad{height:96px}
+.nextbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--deep);border-top:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.nextbar .btn{max-width:420px}
+
 /* leaderboards */
 .rank{list-style:none;margin:0;padding:0;display:grid;gap:2px;font-variant-numeric:tabular-nums}
 .rank li{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line)}
@@ -386,9 +390,9 @@ function qphase(){
   return t < S.game.open_at ? "count" : t <= S.game.close_at ? "vote" : "over";
 }
 function sigData(){
-  const u = [ui.hostTab, ui.err, ui.busy, ui.confirm, ui.choice, ui.choiceRound, ui.uploading, ui.teamN];
+  const u = [ui.hostTab, ui.err, ui.busy, ui.confirm, ui.choice, ui.choiceRound, ui.uploading, ui.teamN, ui.ackRound];
   if (!S) return u;
-  const r = S.round ? Object.assign({}, S.round, {answered: 0}) : null;
+  const r = S.round ? Object.assign({}, S.round, {answered: 0, acks: 0}) : null;
   if (isHost()) return [u, S.game, qphase(), S.teams, S.lobby, r, S.board, S.players];
   return [u, S.game.status, S.game.open_at, S.game.auto, qphase(), S.me, S.team, r, S.board];
 }
@@ -410,6 +414,7 @@ function tick(){
   document.querySelectorAll("[data-left]").forEach(el => el.textContent = Math.ceil(left));
   document.querySelectorAll("[data-bar]").forEach(el => el.style.transform = `scaleX(${left / g.time_limit})`);
   if (S.round) document.querySelectorAll("[data-answered]").forEach(el => el.textContent = `${S.round.answered} / ${S.round.eligible}`);
+  if (S.round) document.querySelectorAll("[data-acks]").forEach(el => el.textContent = `${S.round.acks || 0} / ${S.round.eligible}`);
   document.querySelectorAll("[data-next]").forEach(el => el.textContent = Math.max(0, Math.ceil(((g.reveal_until || 0) - t) / 1000)));
 }
 let revealing = false;
@@ -567,7 +572,7 @@ function standingHTML(){ return `<p class="standing">${S.me.rank}. hely a ${S.me
 function roundHTML(){
   const r = S.round, g = S.game, ph = qphase();
   const head = `<div class="qhead"><span class="h">${teamChip(r.team_no)} képe</span>${g.status === "question" && ph !== "count" ? `<span class="clock"><b data-left></b> mp</span>` : ""}</div>`;
-  if (g.status === "reveal") return head + (g.auto ? `<p class="hint center">A következő kép <b data-next></b> mp múlva indul.</p>` : "") + (r.own ? `<div class="banner own"><b>${r.reveal.correct_count} / ${r.reveal.eligible_count} másik játékos eltalálta</b><span>A csapat minden tagja +${fmt(r.reveal.pose_points)} pontot kap a pózért.</span></div>` : "") + revealHTML() + countsHTML(r.options, r.reveal.counts, r.reveal.answer, r.voted ? r.choice : null) + standingHTML() + boardHTML(5);
+  if (g.status === "reveal") return head + (r.own ? `<div class="banner own"><b>${r.reveal.correct_count} / ${r.reveal.eligible_count} másik játékos eltalálta</b><span>A csapat minden tagja +${fmt(r.reveal.pose_points)} pontot kap a pózért.</span></div>` : "") + revealHTML() + countsHTML(r.options, r.reveal.counts, r.reveal.answer, r.voted ? r.choice : null) + standingHTML() + boardHTML(5) + nextBarHTML();
   const ownB = r.own ? `<div class="banner own"><b>Ez a ti képetek!</b><span>Ti sem tudjátok, melyik festmény az eredeti, úgyhogy tippeljetek ti is.</span></div>` : "";
   if (ph === "count") return head + ownB + roundPhoto(r.team_no) + `<div class="count"><span>Készülj!</span><b data-count></b></div>`;
   const local = ui.choiceRound === r.team_no ? ui.choice : null;
@@ -577,6 +582,12 @@ function roundHTML(){
     <p class="ask">${voted ? `Leadva: <b>${L[ch]}</b>. Várjuk a többieket…` : "Melyik festmény volt az eredeti?"}</p>
     <div class="opts">${r.options.map((id, i) => `<button class="opt${voted ? (i === ch ? " picked" : " dim") : ""}" data-act="vote" data-i="${i}" ${voted ? "disabled" : ""} aria-label="${L[i]} válasz"><img src="${pimg(id)}" alt=""><span class="letter">${L[i]}</span><span class="cap">${esc(art(id)[1])}<small>${esc(art(id)[0])}</small></span></button>`).join("")}</div>
     <p class="hint center"><span data-answered></span> válaszolt</p>`;
+}
+function nextBarHTML(){
+  const r = S.round, acked = r.acked || ui.ackRound === r.team_no;
+  return `<div class="nextpad"></div><div class="nextbar">${acked
+    ? `<span>Várjuk a többieket: <b data-acks></b> megnyomta</span>`
+    : `<button class="btn primary block" data-act="ack">Tovább</button><span class="hint">Ha mindenki megnyomta, jön a következő kép.</span>`}</div>`;
 }
 function revealHTML(){
   const r = S.round, x = r.reveal;
@@ -639,7 +650,7 @@ function runHTML(){
     <h2 class="h">Tippelés</h2>
     <p>${ready} kép vár tippelésre${done ? `, ${done} már lement` : ""}. ${missing > 0 ? `Még ${missing} csapat nem töltött fel képet.` : "Minden csapat feltöltötte a képét."}</p>
     <div class="row"><button class="btn primary" data-act="h-run" ${ready ? "" : "disabled"}>${done ? "Tippelés folytatása" : "Tippelés indítása"}</button></div>
-    <p class="hint">Az összes feltöltött kép sorban lefut: 4 mp visszaszámlálás, 30 mp tippelés, 15 mp eredmény, aztán magától jön a következő. Ha minden csapat képe lement, megjelenik a végeredmény.</p>
+    <p class="hint">Az összes feltöltött kép sorban lefut: 4 mp visszaszámlálás, 30 mp tippelés, aztán az eredmény. A következő kép akkor jön, ha mindenki megnyomta a Tovább gombot, vagy ha te megnyomod a Tovább mindenkinek gombot. Ha minden csapat képe lement, megjelenik a végeredmény.</p>
   </section>`;
 }
 function hostPhoto(t){ return photo(`h${t.no}:${t.photo_at}`, "kg_host_photo", {p_host:getSess().token, p_team_no:t.no}); }
@@ -656,7 +667,7 @@ function hostRoundHTML(){
         : `<div class="opts host">${t.options.map((id, i) => `<figure class="opt"><img src="${pimg(id)}" alt=""><span class="letter">${L[i]}</span><figcaption class="cap">${esc(art(id)[1])}<small>${esc(art(id)[0])}</small></figcaption></figure>`).join("")}</div><p class="hint"><span data-answered></span> válaszolt</p>`}</div>
     </div>
     <div class="row">${rev
-      ? (g.auto ? `<span>A következő kép <b data-next></b> mp múlva indul.</span><button class="btn ghost" data-act="h-pause">Szünet</button>`
+      ? (g.auto ? `<span>Tovább gombot megnyomta: <b data-acks></b></span><button class="btn primary" data-act="h-run">Tovább mindenkinek</button><button class="btn ghost" data-act="h-pause">Szünet</button>`
           : `${S.teams.some(x => x.has_photo && !x.played) ? `<button class="btn primary" data-act="h-run">Következő kép</button>` : ""}<button class="btn ghost" data-act="h-open">Vissza a beálláshoz</button>`)
       : `<button class="btn primary" data-act="h-reveal">Felfedés most</button>${g.auto ? `<button class="btn ghost" data-act="h-pause">Szünet a kör után</button>` : ""}<span class="hint">Lejártkor vagy ha mindenki válaszolt, magától felfedi.</span>`}</div>
   </section>`;
@@ -791,6 +802,11 @@ app.addEventListener("click", async e => {
       ui.choice = +b.dataset.i; ui.choiceRound = no; draw();
       try { await rpc("kg_vote", {p_token: s.token, p_choice: ui.choice}); }
       catch (err) { toast(err.message); if (!/Már válaszoltál/.test(err.message)) ui.choice = null; }
+      poll(); break;
+    }
+    case "ack": {
+      ui.ackRound = S.round.team_no; draw();
+      try { await rpc("kg_ack", {p_token: s.token}); } catch (err) { ui.ackRound = null; toast(err.message); }
       poll(); break;
     }
     case "ask": ui.confirm = b.dataset.what; draw(); break;
