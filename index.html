@@ -363,7 +363,7 @@ async function poll(){
     $("#net").hidden = true;
     if (!host && st.game && st.game.status === "final") {
       const r = await rpc("kg_rejoin", {p_token: s.token});
-      if (r && r.newer) { setSess(null); S = null; sig = ""; ui.joinNick = ""; ui.err = ""; toast("Új játék indult, add meg a beceneved."); }
+      if (r && r.newer) { setSess(null); S = null; sig = ""; ui.joinNick = ""; ui.joinCode = ""; ui.qr = false; clearQuery(); ui.err = "Új játék indult. Olvasd be a szervező új QR-kódját."; }
     }
   } catch (e) {
     if (e.message === "KILEPTETVE") {
@@ -486,12 +486,14 @@ function renderPlayer(){
   return topbarHTML() + body;
 }
 function joinHTML(){
+  const fromQr = ui.qr && !!ui.joinCode;
   return `<section class="hero">
     <p class="eyebrow">Szakkolis kocsmatúra · élőkép-játék</p>
     <h1 class="title">Kocsma<em>galéria</em></h1>
-    <p class="lede">Írd be a beceneved, és már bent is vagy.</p>
+    <p class="lede">${fromQr ? "Add meg a beceneved, és már bent is vagy." : "Olvasd be a szervező telefonján lévő QR-kódot. Ha nem megy, írd be az alatta álló 4 jegyű kódot."}</p>
   </section>
   <form class="card form" data-form="join" novalidate>
+    ${fromQr ? `<p class="eyebrow">Játék ${esc(ui.joinCode)}</p>` : `<label class="field"><span>Játékkód</span><input id="j-code" name="code" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" value="${esc(ui.joinCode)}" placeholder="0000"></label>`}
     <label class="field"><span>Becenév</span><input id="j-nick" name="nick" maxlength="20" autocomplete="nickname" value="${esc(ui.joinNick)}" placeholder="Így látnak a többiek"></label>
     <button class="btn primary block" ${ui.busy ? "disabled" : ""}>${ui.busy ? "Belépés…" : "Belépés"}</button>
     ${ui.err ? `<p class="err">${esc(ui.err)}</p>` : ""}
@@ -620,7 +622,7 @@ function renderHost(){
     : `<button class="btn ghost" data-act="ask" data-what="final" ${g.status === "question" ? "disabled" : ""}>Játék vége, végeredmény</button>`;
   return `<header class="htop">
       <div class="hbrand"><span class="brand">Kocsma<em>galéria</em></span><span class="pill">${STATUS[g.status]}</span><span class="hint">${S.players} játékos</span></div>
-      <div class="joinbox"><div><span class="eyebrow">Belépés</span><b class="url">${esc(location.host + location.pathname)}</b><span class="hint">Csak becenév kell. Szervezői kód: ${esc(g.code)}</span></div><div id="qr" class="qr" aria-label="QR-kód a belépéshez"></div></div>
+      <div class="joinbox"><div><span class="eyebrow">Belépés QR-kóddal</span><b class="code">${esc(g.code)}</b><span class="hint">Olvassátok be a QR-kódot. Ha nem megy: ${esc(location.host + location.pathname)}, és ez a kód.</span></div><div id="qr" class="qr" aria-label="QR-kód a belépéshez"></div></div>
     </header>
     ${S.round ? hostRoundHTML() : runHTML()}
     ${g.status === "final" ? `<section class="card"><h2 class="h">Végeredmény</h2>${podiumHTML()}</section>` : ""}
@@ -746,9 +748,14 @@ app.addEventListener("submit", e => {
   e.preventDefault();
   const form = e.target, f = form.dataset.form, fd = new FormData(form);
   if (f === "join") {
+    if (!(ui.qr && ui.joinCode)) ui.joinCode = String(fd.get("code") || "").replace(/\D/g, "");
     ui.joinNick = String(fd.get("nick") || "").trim();
+    if (ui.joinCode.length !== 4) { ui.err = "Olvasd be a szervező QR-kódját, vagy írd be a 4 jegyű kódot."; draw(); return; }
     if (ui.joinNick.length < 2) { ui.err = "Adj meg legalább 2 betűs becenevet."; draw(); return; }
-    formRun(async () => { const r = await rpc("kg_join", {p_code: ui.joinCode || "", p_nick: ui.joinNick}); setSess({token: r.token, code: r.code}); await poll(); });
+    formRun(async () => {
+      try { const r = await rpc("kg_join", {p_code: ui.joinCode, p_nick: ui.joinNick}); setSess({token: r.token, code: r.code}); await poll(); }
+      catch (e) { if (/véget ért|Nincs ilyen/.test(e.message)) { ui.qr = false; ui.joinCode = ""; clearQuery(); } throw e; }
+    });
   }
   if (f === "create") {
     formRun(async () => {
@@ -788,7 +795,7 @@ app.addEventListener("click", async e => {
     }
     case "ask": ui.confirm = b.dataset.what; draw(); break;
     case "confirm-no": ui.confirm = null; draw(); break;
-    case "leave-yes": setSess(null); S = null; ui.confirm = null; draw(); break;
+    case "leave-yes": setSess(null); S = null; ui.confirm = null; ui.joinCode = ""; ui.joinNick = ""; ui.qr = false; clearQuery(); draw(); break;
     case "h-tab": ui.hostTab = b.dataset.tab; ui.err = ""; draw(); break;
     case "h-start": hostAct("kg_host_start", {p_team_no: +b.dataset.no}); break;
     case "h-reveal": hostAct("kg_host_reveal", {}); break;
@@ -817,6 +824,12 @@ $("#file").addEventListener("change", async e => {
 });
 
 /* start */
+function clearQuery(){ try { if (location.search) history.replaceState(null, "", location.pathname + location.hash); } catch (e) {} }
+const qj = (new URLSearchParams(location.search).get("j") || "").replace(/\D/g, "").slice(0, 4);
+if (qj && !isHost()) {
+  ui.joinCode = qj; ui.qr = true;
+  const s = getSess(); if (s && s.code !== qj) setSess(null);
+}
 poll();
 setInterval(() => { if (S) draw(); }, 200);
 </script>
