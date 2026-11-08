@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Kocsmagaléria</title>
+<title>Shot analízis</title>
 <meta name="description" content="Élőkép-játék a szakkolis kocsmatúrára">
 <meta name="theme-color" content="#1b2a8f">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -494,7 +494,7 @@ function joinHTML(){
   const fromQr = ui.qr && !!ui.joinCode;
   return `<section class="hero">
     <p class="eyebrow">Szakkolis kocsmatúra · élőkép-játék</p>
-    <h1 class="title">Kocsma<em>galéria</em></h1>
+    <h1 class="title">Shot <em>analízis</em></h1>
     <p class="lede">${fromQr ? "Add meg a beceneved, és már bent is vagy." : "Olvasd be a szervező telefonján lévő QR-kódot. Ha nem megy, írd be az alatta álló 4 jegyű kódot."}</p>
   </section>
   <form class="card form" data-form="join" novalidate>
@@ -513,7 +513,7 @@ function joinTeamsHTML(){
 }
 function topbarHTML(){
   const m = S.me;
-  return `<header class="top"><span class="brand">Kocsma<em>galéria</em></span>
+  return `<header class="top"><span class="brand">Shot <em>analízis</em></span>
     <span class="who"><b>${esc(m.nick)}</b>${S.team ? teamChip(S.team.no) : `<span class="pill">Beosztásra vár</span>`}</span>
     <span class="pts"><b>${fmt(m.score)}</b> pont${m.rank ? ` · ${m.rank}. hely` : ""}${m.streak > 1 ? ` · <span class="streak">${m.streak}-es sorozat</span>` : ""}</span></header>`;
 }
@@ -632,7 +632,7 @@ function renderHost(){
     ? `<span>Lezárod a játékot? Utána már nem lehet tippelni.</span><button class="btn primary" data-act="h-final">Igen, vége</button><button class="btn ghost" data-act="confirm-no">Mégse</button>`
     : `<button class="btn ghost" data-act="ask" data-what="final" ${g.status === "question" ? "disabled" : ""}>Játék vége, végeredmény</button>`;
   return `<header class="htop">
-      <div class="hbrand"><span class="brand">Kocsma<em>galéria</em></span><span class="pill">${STATUS[g.status]}</span><span class="hint">${S.players} játékos</span></div>
+      <div class="hbrand"><span class="brand">Shot <em>analízis</em></span><span class="pill">${STATUS[g.status]}</span><span class="hint">${S.players} játékos</span></div>
       <div class="joinbox"><div><span class="eyebrow">Belépés QR-kóddal</span><b class="code">${esc(g.code)}</b><span class="hint">Olvassátok be a QR-kódot. Ha nem megy: ${esc(location.host + location.pathname)}, és ez a kód.</span></div><div id="qr" class="qr" aria-label="QR-kód a belépéshez"></div></div>
     </header>
     ${S.round ? hostRoundHTML() : runHTML()}
@@ -722,7 +722,7 @@ function hostTeamHTML(t){
 function hostLoginHTML(){
   const err = ui.err ? `<p class="err">${esc(ui.err)}</p>` : "";
   const btxt = ui.busy ? "Egy pillanat…" : null;
-  return `<section class="hero"><p class="eyebrow">Szervezői felület</p><h1 class="title">Kocsma<em>galéria</em></h1></section>
+  return `<section class="hero"><p class="eyebrow">Szervezői felület</p><h1 class="title">Shot <em>analízis</em></h1></section>
   <div class="tabs2"><button data-act="h-tab" data-tab="new" aria-pressed="${ui.hostTab === "new"}">Új játék</button><button data-act="h-tab" data-tab="login" aria-pressed="${ui.hostTab === "login"}">Meglévő játék</button></div>
   ${ui.hostTab === "new" ? `<form class="card form" data-form="create">
       <label class="field"><span>Szervezői jelszó</span><input id="h-pw" name="pw" type="password" autocomplete="current-password"></label>
