@@ -545,7 +545,7 @@ function standingHTML(){ return `<p class="standing">${S.me.rank}. hely a ${S.me
 function roundHTML(){
   const r = S.round, g = S.game, ph = qphase();
   const head = `<div class="qhead"><span class="h">${teamChip(r.team_no)} képe</span>${g.status === "question" && ph !== "count" ? `<span class="clock"><b data-left></b> mp</span>` : ""}</div>`;
-  if (g.status === "reveal") return head + revealHTML() + roundPhoto(r.team_no) + countsHTML(r.options, r.reveal.counts, r.reveal.answer, r.voted ? r.choice : null) + standingHTML() + boardHTML(5);
+  if (g.status === "reveal") return head + revealHTML() + countsHTML(r.options, r.reveal.counts, r.reveal.answer, r.voted ? r.choice : null) + standingHTML() + boardHTML(5);
   if (ph === "count") return head + roundPhoto(r.team_no) + `<div class="count"><span>Készülj!</span><b data-count></b></div>`;
   const local = ui.choiceRound === r.team_no ? ui.choice : null;
   const voted = r.voted || local !== null, ch = r.voted ? r.choice : local;
@@ -561,7 +561,11 @@ function revealHTML(){
   if (!r.voted) banner = `<div class="banner bad"><b>Nem válaszoltál</b><span>Ezért a képért nem jár pont, a sorozatod nullázódott.</span></div>`;
   else if (x.correct) banner = `<div class="banner ok"><b>Helyes! +${fmt(x.points + x.bonus)}</b><span>${fmt(x.points)} pont a gyorsaságért${x.bonus ? ` és ${fmt(x.bonus)} sorozatbónusz` : ""}</span></div>`;
   else banner = `<div class="banner bad"><b>Nem talált</b><span>Ezért a képért nem jár pont, a sorozatod nullázódott.</span></div>`;
-  return banner + origFig(r.options[x.answer]);
+  return banner + roundPhoto(r.team_no) + taskHTML(x.description, r.team_no) + origFig(r.options[x.answer]);
+}
+function taskHTML(desc, no){
+  if (!desc) return "";
+  return `<article class="paper"><header class="paper-head"><span class="kicker">A feladvány volt</span>${teamChip(no)}</header><p class="desc">${esc(desc)}</p></article>`;
 }
 function ownRoundHTML(){
   const r = S.round, g = S.game;
@@ -572,7 +576,7 @@ function ownRoundHTML(){
   }
   const x = r.reveal;
   return `<div class="banner ok"><b>${x.correct_count} / ${x.eligible_count} eltalálta</b><span>A csapat minden tagja +${fmt(x.pose_points)} pontot kap.</span></div>
-    ${origFig(r.options[x.answer])}${roundPhoto(r.team_no)}${countsHTML(r.options, x.counts, x.answer, null)}${standingHTML()}${boardHTML(5)}`;
+    ${roundPhoto(r.team_no)}${taskHTML(x.description, r.team_no)}${origFig(r.options[x.answer])}${countsHTML(r.options, x.counts, x.answer, null)}${standingHTML()}${boardHTML(5)}`;
 }
 function finalHTML(){
   return `<section class="hero"><p class="eyebrow">Vége a játéknak</p><h1 class="title sm">Végeredmény</h1>
@@ -612,7 +616,7 @@ function hostRoundHTML(){
     <div class="rgrid">
       <button class="gilt" data-act="zoom">${src ? `<img src="${src}" alt="A csapat fotója">` : `<span class="loading">Kép betöltése…</span>`}</button>
       <div style="display:grid;gap:12px">${rev
-        ? `${countsHTML(t.options, r.counts, t.answer, null)}<p class="big">${t.correct_count} / ${t.eligible_count} eltalálta</p><p class="hint">A ${r.team_no}. csapat tagjai +${fmt(t.pose_points)} pontot kaptak.</p>`
+        ? `${taskHTML(t.description, r.team_no)}${origFig(t.options[t.answer])}${countsHTML(t.options, r.counts, t.answer, null)}<p class="big">${t.correct_count} / ${t.eligible_count} eltalálta</p><p class="hint">A ${r.team_no}. csapat tagjai +${fmt(t.pose_points)} pontot kaptak.</p>`
         : `<div class="opts host">${t.options.map((id, i) => `<figure class="opt"><img src="${pimg(id)}" alt=""><span class="letter">${L[i]}</span><figcaption class="cap">${esc(art(id)[1])}<small>${esc(art(id)[0])}</small></figcaption></figure>`).join("")}</div><p class="hint"><span data-answered></span> válaszolt</p>`}</div>
     </div>
     <div class="row">${rev ? `<button class="btn ghost" data-act="h-open">Vissza a beálláshoz</button><span class="hint">Vagy indítsd a következő képet lent.</span>` : `<button class="btn primary" data-act="h-reveal">Felfedés most</button><span class="hint">Lejártkor vagy ha mindenki válaszolt, magától felfedi.</span>`}</div>
