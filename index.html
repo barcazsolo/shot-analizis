@@ -686,7 +686,7 @@ function hostLoginHTML(){
   <div class="tabs2"><button data-act="h-tab" data-tab="new" aria-pressed="${ui.hostTab === "new"}">Új játék</button><button data-act="h-tab" data-tab="login" aria-pressed="${ui.hostTab === "login"}">Meglévő játék</button></div>
   ${ui.hostTab === "new" ? `<form class="card form" data-form="create">
       <label class="field"><span>Szervezői jelszó</span><input id="h-pw" name="pw" type="password" autocomplete="current-password"></label>
-      <label class="field"><span>Idő képenként</span><select id="h-time" name="time">${[20,30,45,60].map(n => `<option value="${n}" ${String(n) === ui.hostTime ? "selected" : ""}>${n} mp</option>`).join("")}</select></label>
+      <p class="hint">Minden képre fél perc (30 másodperc) jut a tippelésre.</p>
       <button class="btn primary block" ${ui.busy ? "disabled" : ""}>${btxt || "Játék létrehozása"}</button>${err}</form>`
     : `<form class="card form" data-form="hlogin">
       <label class="field"><span>Játékkód</span><input id="h-code" name="code" inputmode="numeric" maxlength="4" value="${esc(ui.hostCode)}"></label>
@@ -724,9 +724,8 @@ app.addEventListener("submit", e => {
     formRun(async () => { const r = await rpc("kg_join", {p_code: ui.joinCode || "", p_nick: ui.joinNick}); setSess({token: r.token, code: r.code}); await poll(); });
   }
   if (f === "create") {
-    ui.hostTime = String(fd.get("time"));
     formRun(async () => {
-      const r = await rpc("kg_create_game", {p_password: String(fd.get("pw") || ""), p_time: +ui.hostTime});
+      const r = await rpc("kg_create_game", {p_password: String(fd.get("pw") || ""), p_time: 30});
       setSess({token: r.host_token, code: r.code}); await poll();
     });
   }
