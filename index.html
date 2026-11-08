@@ -461,7 +461,7 @@ function qphase(){
   return t < S.game.open_at ? "count" : t <= S.game.close_at ? "vote" : "over";
 }
 function sigData(){
-  const u = [ui.hostTab, ui.err, ui.busy, ui.confirm, ui.choice, ui.choiceRound, ui.uploading, ui.teamN, ui.ackRound];
+  const u = [ui.hostTab, ui.err, ui.busy, ui.confirm, ui.choice, ui.choiceRound, ui.uploading, ui.teamN, ui.ackRound, ui.games];
   if (!S) return u;
   const r = S.round ? Object.assign({}, S.round, {answered: 0, acks: 0}) : null;
   if (isHost()) return [u, S.game, qphase(), S.teams, S.lobby, r, S.board, S.players];
@@ -801,10 +801,16 @@ function hostLoginHTML(){
       <label class="field"><span>Szervezői jelszó</span><input id="h-pw" name="pw" type="password" autocomplete="current-password"></label>
       <p class="hint">Minden képre fél perc (30 másodperc) jut a tippelésre.</p>
       <button class="btn primary block" ${ui.busy ? "disabled" : ""}>${btxt || "Játék létrehozása"}</button>${err}</form>`
-    : `<form class="card form" data-form="hlogin">
-      <label class="field"><span>Játékkód</span><input id="h-code" name="code" inputmode="numeric" maxlength="4" value="${esc(ui.hostCode)}"></label>
+    : (ui.games ? gamesListHTML() : `<form class="card form" data-form="hgames">
       <label class="field"><span>Szervezői jelszó</span><input id="h-pw2" name="pw" type="password" autocomplete="current-password"></label>
-      <button class="btn primary block" ${ui.busy ? "disabled" : ""}>${btxt || "Belépés"}</button>${err}</form>`}`;
+      <button class="btn primary block" ${ui.busy ? "disabled" : ""}>${btxt || "Korábbi játékok mutatása"}</button>${err}</form>`)}`;
+}
+function gamesListHTML(){
+  const d = ms => new Date(ms).toLocaleString("hu-HU", {month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"});
+  return `<section class="card"><h2 class="h">Korábbi játékok</h2>
+    <ol class="rank">${ui.games.map(g => `<li><span class="rn"><b>${esc(d(g.created))}</b><br><span class="hint">Kód: ${esc(g.code)} · ${g.players} játékos · ${g.photos} fotó</span></span><span class="pill${g.status === "final" ? "" : " ok"}">${g.status === "final" ? "Lezárva" : "Fut"}</span><button class="btn ghost" data-act="h-open-game" data-code="${esc(g.code)}" ${ui.busy ? "disabled" : ""}>Megnyitás</button></li>`).join("") || `<li class="hint">Még nincs játék.</li>`}</ol>
+    ${ui.err ? `<p class="err">${esc(ui.err)}</p>` : ""}
+    <button class="linkbtn" data-act="h-games-back">Vissza</button></section>`;
 }
 
 function saveBlob(blob, name){
@@ -958,12 +964,9 @@ app.addEventListener("submit", e => {
       setSess({token: r.host_token, code: r.code}); await poll();
     });
   }
-  if (f === "hlogin") {
-    ui.hostCode = String(fd.get("code") || "").trim();
-    formRun(async () => {
-      const r = await rpc("kg_host_login", {p_password: String(fd.get("pw") || ""), p_code: ui.hostCode});
-      setSess({token: r.host_token, code: r.code}); await poll();
-    });
+  if (f === "hgames") {
+    const pw = String(fd.get("pw") || "");
+    formRun(async () => { ui.games = await rpc("kg_host_games", {p_password: pw}); ui.hpw = pw; });
   }
 });
 app.addEventListener("click", async e => {
@@ -1010,6 +1013,11 @@ app.addEventListener("click", async e => {
     case "h-new": setSess(null); S = null; ui.hostTab = "new"; ui.confirm = null; ui.err = ""; draw(); break;
     case "h-zip": run(zipAll); break;
     case "h-sheet": { const t = S.teams.find(x => x.no === +b.dataset.no); run(async () => { saveBlob(await sheetBlob(t), `shot-analizis-${S.game.code}-csapat-${t.no}.jpg`); toast("Feladványlap letöltve."); }); break; }
+    case "h-open-game": formRun(async () => {
+        const r = await rpc("kg_host_login", {p_password: ui.hpw, p_code: b.dataset.code});
+        ui.games = null; ui.hpw = null; setSess({token: r.host_token, code: r.code}); await poll();
+      }); break;
+    case "h-games-back": ui.games = null; ui.hpw = null; ui.err = ""; draw(); break;
     case "h-logout": setSess(null); S = null; draw(); break;
   }
 });
