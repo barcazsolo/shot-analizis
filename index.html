@@ -386,7 +386,7 @@ function sigData(){
   if (!S) return u;
   const r = S.round ? Object.assign({}, S.round, {answered: 0}) : null;
   if (isHost()) return [u, S.game, qphase(), S.teams, S.lobby, r, S.board, S.players];
-  return [u, S.game.status, S.game.open_at, qphase(), S.me, S.team, r, S.board];
+  return [u, S.game.status, S.game.open_at, S.game.auto, qphase(), S.me, S.team, r, S.board];
 }
 function draw(){
   const key = (isHost() ? "H" : "P") + JSON.stringify(sigData()) + photoVer;
@@ -406,7 +406,7 @@ function tick(){
   document.querySelectorAll("[data-left]").forEach(el => el.textContent = Math.ceil(left));
   document.querySelectorAll("[data-bar]").forEach(el => el.style.transform = `scaleX(${left / g.time_limit})`);
   if (S.round) document.querySelectorAll("[data-answered]").forEach(el => el.textContent = `${S.round.answered} / ${S.round.eligible}`);
-  if (isHost()) autoReveal();
+  document.querySelectorAll("[data-next]").forEach(el => el.textContent = Math.max(0, Math.ceil(((g.reveal_until || 0) - t) / 1000)));
 }
 let revealing = false;
 function autoReveal(){
@@ -459,13 +459,13 @@ function rulesHTML(){
   <ol>
     <li>Ha mindenki bent van, a játék kisorsolja a csapatokat, és megkapod a csapatod titkos megbízását: egy festmény leírását. Az eredetit nem látjátok.</li>
     <li>Álljatok be a jelenetbe. Egy önként vállalkozó csapattag feltölti a fotót, csapatonként csak ő tud.</li>
-    <li>A szervező egyenként indítja a képeket. Mindenki a saját telefonján tippel: a 4 festmény közül melyik volt az eredeti?</li>
+    <li>A szervező elindítja a tippelést, és a képek sorban jönnek egymás után. Mindenki a saját telefonján tippel: a 4 festmény közül melyik volt az eredeti?</li>
   </ol>
   <ul>
     <li><b>Helyes tipp:</b> 500–1000 pont. Minél gyorsabb vagy, annál több. Az időt a szerver méri, a pontot a gép számolja.</li>
     <li><b>Rossz vagy kimaradt tipp:</b> 0 pont, és a sorozatod nullázódik.</li>
     <li><b>Sorozatbónusz:</b> a 2. helyes tipp zsinórban +100, a 3. +200, egészen +500-ig.</li>
-    <li><b>Saját kép:</b> arra nem tippelhettek. Helyette a csapat minden tagja 1000 × (az eltalálók aránya) pontot kap.</li>
+    <li><b>Saját kép:</b> arra ti is tippelhettek, hiszen ti sem tudjátok a megoldást. A pózért a csapat minden tagja még 1000 × (a többi játékos közül az eltalálók aránya) pontot kap.</li>
     <li><b>Csapatverseny:</b> a tagok átlagpontja dönt, így a létszám nem számít.</li>
   </ul></details>`;
 }
@@ -477,7 +477,7 @@ function renderPlayer(){
   let body;
   if (g.status === "final") body = finalHTML();
   else if (!S.team) body = lobbyHTML();
-  else if ((g.status === "question" || g.status === "reveal") && S.round) body = S.round.own ? ownRoundHTML() : roundHTML();
+  else if ((g.status === "question" || g.status === "reveal") && S.round) body = roundHTML();
   else body = missionHTML();
   return topbarHTML() + body;
 }
@@ -561,12 +561,13 @@ function standingHTML(){ return `<p class="standing">${S.me.rank}. hely a ${S.me
 function roundHTML(){
   const r = S.round, g = S.game, ph = qphase();
   const head = `<div class="qhead"><span class="h">${teamChip(r.team_no)} képe</span>${g.status === "question" && ph !== "count" ? `<span class="clock"><b data-left></b> mp</span>` : ""}</div>`;
-  if (g.status === "reveal") return head + revealHTML() + countsHTML(r.options, r.reveal.counts, r.reveal.answer, r.voted ? r.choice : null) + standingHTML() + boardHTML(5);
-  if (ph === "count") return head + roundPhoto(r.team_no) + `<div class="count"><span>Készülj!</span><b data-count></b></div>`;
+  if (g.status === "reveal") return head + (g.auto ? `<p class="hint center">A következő kép <b data-next></b> mp múlva indul.</p>` : "") + (r.own ? `<div class="banner own"><b>${r.reveal.correct_count} / ${r.reveal.eligible_count} másik játékos eltalálta</b><span>A csapat minden tagja +${fmt(r.reveal.pose_points)} pontot kap a pózért.</span></div>` : "") + revealHTML() + countsHTML(r.options, r.reveal.counts, r.reveal.answer, r.voted ? r.choice : null) + standingHTML() + boardHTML(5);
+  const ownB = r.own ? `<div class="banner own"><b>Ez a ti képetek!</b><span>Ti sem tudjátok, melyik festmény az eredeti, úgyhogy tippeljetek ti is.</span></div>` : "";
+  if (ph === "count") return head + ownB + roundPhoto(r.team_no) + `<div class="count"><span>Készülj!</span><b data-count></b></div>`;
   const local = ui.choiceRound === r.team_no ? ui.choice : null;
   const voted = r.voted || local !== null, ch = r.voted ? r.choice : local;
   if (ph === "over" && !voted) return head + roundPhoto(r.team_no) + `<div class="card center"><p class="big">Lejárt az idő</p><p class="hint">Várjuk az eredményt.</p></div>`;
-  return head + roundPhoto(r.team_no) + `<div class="bar"><i data-bar></i></div>
+  return head + ownB + roundPhoto(r.team_no) + `<div class="bar"><i data-bar></i></div>
     <p class="ask">${voted ? `Leadva: <b>${L[ch]}</b>. Várjuk a többieket…` : "Melyik festmény volt az eredeti?"}</p>
     <div class="opts">${r.options.map((id, i) => `<button class="opt${voted ? (i === ch ? " picked" : " dim") : ""}" data-act="vote" data-i="${i}" ${voted ? "disabled" : ""} aria-label="${L[i]} válasz"><img src="${pimg(id)}" alt=""><span class="letter">${L[i]}</span><span class="cap">${esc(art(id)[1])}<small>${esc(art(id)[0])}</small></span></button>`).join("")}</div>
     <p class="hint center"><span data-answered></span> válaszolt</p>`;
@@ -616,12 +617,23 @@ function renderHost(){
       <div class="hbrand"><span class="brand">Kocsma<em>galéria</em></span><span class="pill">${STATUS[g.status]}</span><span class="hint">${S.players} játékos</span></div>
       <div class="joinbox"><div><span class="eyebrow">Belépés</span><b class="url">${esc(location.host + location.pathname)}</b><span class="hint">Csak becenév kell. Szervezői kód: ${esc(g.code)}</span></div><div id="qr" class="qr" aria-label="QR-kód a belépéshez"></div></div>
     </header>
-    ${S.round ? hostRoundHTML() : ""}
+    ${S.round ? hostRoundHTML() : runHTML()}
     ${g.status === "final" ? `<section class="card"><h2 class="h">Végeredmény</h2>${podiumHTML()}</section>` : ""}
     ${assignHTML()}
     ${S.teams.length ? `<section style="display:grid;gap:12px"><h2 class="h">Csapatok</h2><div class="hteams">${S.teams.map(hostTeamHTML).join("")}</div></section>` : ""}
     ${boardHTML(10)}
     <section class="card hctl">${ctl}<button class="linkbtn" data-act="h-logout">Kilépés a szervezői nézetből</button></section>`;
+}
+function runHTML(){
+  if (!S.teams.length || S.game.status === "final") return "";
+  const total = S.teams.length, ready = S.teams.filter(t => t.has_photo && !t.played).length, done = S.teams.filter(t => t.played).length;
+  const missing = total - done - ready;
+  return `<section class="card">
+    <h2 class="h">Tippelés</h2>
+    <p>${ready} kép vár tippelésre${done ? `, ${done} már lement` : ""}. ${missing > 0 ? `Még ${missing} csapat nem töltött fel képet.` : "Minden csapat feltöltötte a képét."}</p>
+    <div class="row"><button class="btn primary" data-act="h-run" ${ready ? "" : "disabled"}>${done ? "Tippelés folytatása" : "Tippelés indítása"}</button></div>
+    <p class="hint">Az összes feltöltött kép sorban lefut: 4 mp visszaszámlálás, 30 mp tippelés, 15 mp eredmény, aztán magától jön a következő. Ha minden csapat képe lement, megjelenik a végeredmény.</p>
+  </section>`;
 }
 function hostPhoto(t){ return photo(`h${t.no}:${t.photo_at}`, "kg_host_photo", {p_host:getSess().token, p_team_no:t.no}); }
 function hostRoundHTML(){
@@ -636,7 +648,10 @@ function hostRoundHTML(){
         ? `${taskHTML(t.description, r.team_no)}${origFig(t.options[t.answer])}${countsHTML(t.options, r.counts, t.answer, null)}<p class="big">${t.correct_count} / ${t.eligible_count} eltalálta</p><p class="hint">A ${r.team_no}. csapat tagjai +${fmt(t.pose_points)} pontot kaptak.</p>`
         : `<div class="opts host">${t.options.map((id, i) => `<figure class="opt"><img src="${pimg(id)}" alt=""><span class="letter">${L[i]}</span><figcaption class="cap">${esc(art(id)[1])}<small>${esc(art(id)[0])}</small></figcaption></figure>`).join("")}</div><p class="hint"><span data-answered></span> válaszolt</p>`}</div>
     </div>
-    <div class="row">${rev ? `<button class="btn ghost" data-act="h-open">Vissza a beálláshoz</button><span class="hint">Vagy indítsd a következő képet lent.</span>` : `<button class="btn primary" data-act="h-reveal">Felfedés most</button><span class="hint">Lejártkor vagy ha mindenki válaszolt, magától felfedi.</span>`}</div>
+    <div class="row">${rev
+      ? (g.auto ? `<span>A következő kép <b data-next></b> mp múlva indul.</span><button class="btn ghost" data-act="h-pause">Szünet</button>`
+          : `${S.teams.some(x => x.has_photo && !x.played) ? `<button class="btn primary" data-act="h-run">Következő kép</button>` : ""}<button class="btn ghost" data-act="h-open">Vissza a beálláshoz</button>`)
+      : `<button class="btn primary" data-act="h-reveal">Felfedés most</button>${g.auto ? `<button class="btn ghost" data-act="h-pause">Szünet a kör után</button>` : ""}<span class="hint">Lejártkor vagy ha mindenki válaszolt, magától felfedi.</span>`}</div>
   </section>`;
 }
 function memberHTML(m){
@@ -676,7 +691,6 @@ function hostTeamHTML(t){
       <div class="ht-info">
         <p class="hint">Feltöltő: ${t.uploader ? `<b>${esc(t.uploader)}</b>${t.played ? "" : ` <button class="linkbtn" data-act="h-release" data-no="${t.no}">felszabadítás</button>`}` : "még senki"}</p>
         ${t.played ? `<p>${t.correct_count} / ${t.eligible_count} eltalálta · +${fmt(t.pose_points)} pont/fő</p>` : ""}
-        ${canStart ? `<button class="btn primary" data-act="h-start" data-no="${t.no}">Tippelés indítása</button>` : ""}
       </div>
     </div>
     <p class="members">${mem || `<span class="hint">Még senki nem lépett be.</span>`}</p>
@@ -779,6 +793,8 @@ app.addEventListener("click", async e => {
     case "h-kick": hostAct("kg_host_kick", {p_player: b.dataset.id}); break;
     case "h-n": ui.teamN = (ui.teamK || 2) + +b.dataset.d; draw(); break;
     case "h-assign": ui.teamN = ui.teamK; await hostAct("kg_host_assign", {p_teams: ui.teamK}); ui.teamN = null; break;
+    case "h-run": hostAct("kg_host_run", {}); break;
+    case "h-pause": hostAct("kg_host_pause", {}); break;
     case "h-logout": setSess(null); S = null; draw(); break;
   }
 });
