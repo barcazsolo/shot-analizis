@@ -173,6 +173,7 @@ img{max-width:100%}
 .joinbox{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--raise);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
 .joinbox>div:first-child{display:grid;gap:2px;min-width:0}
 .code{font-family:var(--f-m);font-size:clamp(2.6rem,10vw,3.6rem);letter-spacing:.18em;line-height:1.05;color:var(--text)}
+.url{font-family:var(--f-m);font-size:clamp(1.05rem,4.5vw,1.6rem);line-height:1.25;color:var(--text);word-break:break-all}
 .qr{background:var(--paper);padding:8px;border-radius:8px;line-height:0}
 .qr img,.qr canvas{display:block;width:132px;height:132px}
 .tabs2{display:flex;gap:6px;background:var(--deep);border-radius:999px;padding:4px;width:fit-content;max-width:100%}
@@ -418,7 +419,7 @@ function afterRender(){
   }
   if (S && S.round && S.round.options) S.round.options.forEach(id => { const i = new Image(); i.src = pimg(id); });
 }
-function joinUrl(){ return `${location.origin}${location.pathname}?kod=${S.game.code}`; }
+function joinUrl(){ return `${location.origin}${location.pathname}`; }
 
 /* shared pieces */
 const teamChip = no => `<span class="chip" style="--tc:${COLORS[(no - 1) % 10]}">${no}. csapat</span>`;
@@ -478,10 +479,9 @@ function joinHTML(){
   return `<section class="hero">
     <p class="eyebrow">Szakkolis kocsmatúra · élőkép-játék</p>
     <h1 class="title">Kocsma<em>galéria</em></h1>
-    <p class="lede">Írd be a szervezőtől kapott játékkódot és a beceneved.</p>
+    <p class="lede">Írd be a beceneved, és már bent is vagy.</p>
   </section>
   <form class="card form" data-form="join" novalidate>
-    <label class="field"><span>Játékkód</span><input id="j-code" name="code" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" value="${esc(ui.joinCode)}" placeholder="0000"></label>
     <label class="field"><span>Becenév</span><input id="j-nick" name="nick" maxlength="20" autocomplete="nickname" value="${esc(ui.joinNick)}" placeholder="Így látnak a többiek"></label>
     <button class="btn primary block" ${ui.busy ? "disabled" : ""}>${ui.busy ? "Belépés…" : "Belépés"}</button>
     ${ui.err ? `<p class="err">${esc(ui.err)}</p>` : ""}
@@ -606,7 +606,7 @@ function renderHost(){
     : `<button class="btn ghost" data-act="ask" data-what="final" ${g.status === "question" ? "disabled" : ""}>Játék vége, végeredmény</button>`;
   return `<header class="htop">
       <div class="hbrand"><span class="brand">Kocsma<em>galéria</em></span><span class="pill">${STATUS[g.status]}</span><span class="hint">${S.players} játékos</span></div>
-      <div class="joinbox"><div><span class="eyebrow">Játékkód</span><b class="code">${esc(g.code)}</b><span class="hint">${esc(location.host + location.pathname)}</span></div><div id="qr" class="qr" aria-label="QR-kód a belépéshez"></div></div>
+      <div class="joinbox"><div><span class="eyebrow">Belépés</span><b class="url">${esc(location.host + location.pathname)}</b><span class="hint">Csak becenév kell. Szervezői kód: ${esc(g.code)}</span></div><div id="qr" class="qr" aria-label="QR-kód a belépéshez"></div></div>
     </header>
     ${S.round ? hostRoundHTML() : ""}
     ${g.status === "final" ? `<section class="card"><h2 class="h">Végeredmény</h2>${podiumHTML()}</section>` : ""}
@@ -719,11 +719,9 @@ app.addEventListener("submit", e => {
   e.preventDefault();
   const form = e.target, f = form.dataset.form, fd = new FormData(form);
   if (f === "join") {
-    ui.joinCode = String(fd.get("code") || "").replace(/\D/g, "");
     ui.joinNick = String(fd.get("nick") || "").trim();
-    if (ui.joinCode.length !== 4) { ui.err = "A játékkód 4 számjegy."; draw(); return; }
     if (ui.joinNick.length < 2) { ui.err = "Adj meg legalább 2 betűs becenevet."; draw(); return; }
-    formRun(async () => { const r = await rpc("kg_join", {p_code: ui.joinCode, p_nick: ui.joinNick}); setSess({token: r.token, code: ui.joinCode}); await poll(); });
+    formRun(async () => { const r = await rpc("kg_join", {p_code: ui.joinCode || "", p_nick: ui.joinNick}); setSess({token: r.token, code: r.code}); await poll(); });
   }
   if (f === "create") {
     ui.hostTime = String(fd.get("time"));
