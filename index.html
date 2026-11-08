@@ -711,7 +711,7 @@ function renderHost(){
     ${assignHTML()}
     ${S.teams.length ? `<section style="display:grid;gap:12px"><h2 class="h">Csapatok</h2><div class="hteams">${S.teams.map(hostTeamHTML).join("")}</div></section>` : ""}
     ${boardHTML(10)}
-    <section class="card hctl">${ctl}${S.teams.some(t => t.has_photo) ? `<button class="btn ghost" data-act="h-zip" ${ui.busy ? "disabled" : ""}>${ui.busy ? "Csomagolás…" : "Összes fotó letöltése"}</button>` : ""}${ui.confirm === "newgame" ? `<span>Új játékot kezdesz? A mostani lezárul, és mindenkinek újra be kell lépnie.</span><button class="btn primary" data-act="h-new">Igen, új játék</button><button class="btn ghost" data-act="confirm-no">Mégse</button>` : `<button class="btn ghost" data-act="ask" data-what="newgame">Új játék indítása</button>`}<button class="linkbtn" data-act="h-logout">Kilépés a szervezői nézetből</button></section>`;
+    <section class="card hctl">${ctl}${S.teams.some(t => t.has_photo) ? `<button class="btn ghost" data-act="h-zip" ${ui.busy ? "disabled" : ""}>${ui.busy ? "Készül…" : "Összes feladványlap letöltése (ZIP)"}</button>` : ""}${ui.confirm === "newgame" ? `<span>Új játékot kezdesz? A mostani lezárul, és mindenkinek újra be kell lépnie.</span><button class="btn primary" data-act="h-new">Igen, új játék</button><button class="btn ghost" data-act="confirm-no">Mégse</button>` : `<button class="btn ghost" data-act="ask" data-what="newgame">Új játék indítása</button>`}<button class="linkbtn" data-act="h-logout">Kilépés a szervezői nézetből</button></section>`;
 }
 function runHTML(){
   if (!S.teams.length || S.game.status === "final") return "";
@@ -779,7 +779,8 @@ function hostTeamHTML(t){
       <button class="hthumb" data-act="zoom" ${t.has_photo ? "" : "disabled"}>${t.has_photo ? (src ? `<img src="${src}" alt="">` : `<span class="loading">…</span>`) : `<span class="hint">Még nincs fotó</span>`}</button>
       <div class="ht-info">
         <p class="hint">Feltöltő: ${t.uploader ? `<b>${esc(t.uploader)}</b>${t.played ? "" : ` <button class="linkbtn" data-act="h-release" data-no="${t.no}">felszabadítás</button>`}` : "még senki"}</p>
-        ${src ? `<a class="linkbtn" href="${src}" download="shot-analizis-${esc(S.game.code)}-csapat-${t.no}.jpg">Fotó letöltése</a>` : ""}
+        ${t.has_photo ? `<button class="linkbtn" data-act="h-sheet" data-no="${t.no}">Feladványlap letöltése</button>` : ""}
+        ${src ? `<a class="linkbtn" href="${src}" download="shot-analizis-${esc(S.game.code)}-csapat-${t.no}-foto.jpg">Csak a fotó</a>` : ""}
         ${t.played ? `<p>${t.correct_count} / ${t.eligible_count} eltalálta · +${fmt(t.pose_points)} pont/fő</p>` : ""}
       </div>
     </div>
@@ -806,6 +807,99 @@ function hostLoginHTML(){
       <button class="btn primary block" ${ui.busy ? "disabled" : ""}>${btxt || "Belépés"}</button>${err}</form>`}`;
 }
 
+function saveBlob(blob, name){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 3000);
+}
+const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error("Egy kép nem töltődött be, próbáld újra.")); i.src = src; });
+async function hostPhotoData(t){
+  const k = `h${t.no}:${t.photo_at}`, c = photos[k];
+  if (c && c !== "loading" && c !== "err") return c;
+  const d = await rpc("kg_host_photo", {p_host: getSess().token, p_team_no: t.no});
+  if (!d) throw new Error(`A ${t.no}. csapatnak nincs fotója.`);
+  photos[k] = d; return d;
+}
+function rr(x, X, Y, w, h, r){ x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w, Y, X + w, Y + h, r); x.arcTo(X + w, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w, Y, r); x.closePath(); }
+function wrapLines(x, text, maxW){
+  const out = []; let cur = "";
+  for (const w of String(text).split(/\s+/)) { const t = cur ? cur + " " + w : w; if (x.measureText(t).width > maxW && cur) { out.push(cur); cur = w; } else cur = t; }
+  if (cur) out.push(cur); return out;
+}
+async function sheetBlob(t){
+  try { await Promise.all(['96px "Rubik Dirt"', '800 34px "Baloo 2"', '700 28px "Baloo 2"', '600 34px "Nunito"', '500 24px "Nunito"'].map(f => document.fonts.load(f))); } catch (e) {}
+  const INK = "#1e4a2c", CREAM = "#fdf8e7", PALE = "#eaf3dc", GREEN = "#cfe6b4", ORANGE = "#f5a524", OK = "#2f9e4f", MUTED = "#56705f";
+  const W = 1080, P = 60, CW = W - 2 * P;
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = 3600;
+  const x = cv.getContext("2d"); x.textBaseline = "top";
+  const box = (X, Y, w, h, r, fill, stroke = INK, lw = 4, sh = 6) => {
+    x.fillStyle = INK; rr(x, X + sh, Y + sh, w, h, r); x.fill();
+    x.fillStyle = fill; rr(x, X, Y, w, h, r); x.fill(); x.lineWidth = lw; x.strokeStyle = stroke; x.stroke();
+  };
+  const pill = (text, X, Y, fill, font = '800 26px "Baloo 2", sans-serif') => {
+    x.font = font; const w = x.measureText(text).width + 36;
+    box(X, Y, w, 46, 23, fill, INK, 3, 0); x.fillStyle = INK; x.fillText(text, X + 18, Y + 8); return w;
+  };
+  x.fillStyle = GREEN; x.fillRect(0, 0, W, cv.height);
+  let y = P;
+  x.fillStyle = INK; x.font = '96px "Rubik Dirt", "Baloo 2", Impact, sans-serif'; x.fillText("SHOT-ANALÍZIS", P, y); y += 112;
+  x.font = '800 32px "Baloo 2", sans-serif'; x.fillStyle = "#d86f00"; x.fillText("research by:", P, y);
+  const rw = x.measureText("research by: ").width; x.fillStyle = INK; x.fillText("Ihrig Károly Szakkollégium", P + rw, y); y += 70;
+  x.font = '800 36px "Baloo 2", sans-serif';
+  const label = `${t.no}. csapat képe`, lw = x.measureText(label).width + 56;
+  box(P, y, lw, 64, 32, COLORS[(t.no - 1) % 10], INK, 4, 4); x.fillStyle = INK; x.fillText(label, P + 28, y + 10); y += 100;
+
+  const ph = await loadImg(await hostPhotoData(t));
+  const k = Math.min((CW - 36) / ph.naturalWidth, 760 / ph.naturalHeight), dw = ph.naturalWidth * k, dh = ph.naturalHeight * k;
+  const fx = (W - dw - 36) / 2;
+  box(fx, y, dw + 36, dh + 36, 22, ORANGE, INK, 5, 8);
+  x.drawImage(ph, fx + 18, y + 18, dw, dh); x.lineWidth = 4; x.strokeStyle = INK; x.strokeRect(fx + 18, y + 18, dw, dh);
+  y += dh + 36 + 50;
+
+  x.font = '600 34px "Nunito", sans-serif';
+  const lines = wrapLines(x, t.description, CW - 64), dh2 = 30 + 46 + 24 + lines.length * 50 + 30;
+  box(P, y, CW, dh2, 22, CREAM);
+  pill("A FELADVÁNY", P + 30, y + 30, ORANGE);
+  x.fillStyle = INK; x.font = '600 34px "Nunito", sans-serif';
+  lines.forEach((l, i) => x.fillText(l, P + 32, y + 30 + 46 + 24 + i * 50));
+  y += dh2 + 50;
+
+  x.fillStyle = INK; x.font = '800 40px "Baloo 2", sans-serif'; x.fillText("Melyik volt az eredeti?", P, y); y += 66;
+  const gap = 30, cw = (CW - gap) / 2, imgH = 330, cellH = 16 + imgH + 18 + 2 * 34 + 32 + 22;
+  const imgs = await Promise.all(t.options.map(id => loadImg(pimg(id))));
+  t.options.forEach((id, i) => {
+    const cx = P + (i % 2) * (cw + gap), cy = y + Math.floor(i / 2) * (cellH + gap), ok = i === t.answer, a = art(id);
+    box(cx, cy, cw, cellH, 20, ok ? "#e3f4e3" : CREAM, ok ? OK : INK, ok ? 8 : 4, 6);
+    x.fillStyle = PALE; x.fillRect(cx + 16, cy + 16, cw - 32, imgH);
+    const im = imgs[i], kk = Math.min((cw - 32) / im.naturalWidth, imgH / im.naturalHeight), iw = im.naturalWidth * kk, ih = im.naturalHeight * kk;
+    x.drawImage(im, cx + 16 + (cw - 32 - iw) / 2, cy + 16 + (imgH - ih) / 2, iw, ih);
+    x.fillStyle = ORANGE; x.beginPath(); x.arc(cx + 34, cy + 34, 30, 0, Math.PI * 2); x.fill(); x.lineWidth = 4; x.strokeStyle = INK; x.stroke();
+    x.fillStyle = INK; x.font = '800 36px "Baloo 2", sans-serif'; x.textAlign = "center"; x.fillText(L[i], cx + 34, cy + 14); x.textAlign = "left";
+    if (ok) { x.font = '800 26px "Baloo 2", sans-serif'; const tw = x.measureText("EREDETI ✓").width + 32; x.fillStyle = OK; rr(x, cx + cw - tw - 20, cy + 22, tw, 44, 22); x.fill(); x.fillStyle = "#ffffff"; x.fillText("EREDETI ✓", cx + cw - tw - 4, cy + 29); }
+    x.fillStyle = INK; x.font = '700 28px "Baloo 2", sans-serif';
+    let tl = wrapLines(x, a[1], cw - 36);
+    if (tl.length > 2) { tl = tl.slice(0, 2); while (x.measureText(tl[1] + "…").width > cw - 36 && tl[1].length) tl[1] = tl[1].slice(0, -1); tl[1] += "…"; }
+    tl.forEach((l, j) => x.fillText(l, cx + 18, cy + 16 + imgH + 18 + j * 34));
+    x.fillStyle = MUTED; x.font = '500 24px "Nunito", sans-serif'; x.fillText(`${a[0]}, ${a[2]}`, cx + 18, cy + 16 + imgH + 18 + 2 * 34 + 4);
+  });
+  y += 2 * cellH + gap + 50;
+
+  const names = t.members.map(m => m.nick).join(", ");
+  x.font = '600 28px "Nunito", sans-serif';
+  const nl = names ? wrapLines(x, "Csapat: " + names, CW - 64) : [];
+  const res = t.played ? `${t.correct_count} / ${t.eligible_count} másik játékos találta el · +${fmt(t.pose_points)} pont csapattagonként` : "Erre a képre még nem tippeltek.";
+  x.font = '800 30px "Baloo 2", sans-serif';
+  const rl = wrapLines(x, res, CW - 64), h3 = 30 + rl.length * 40 + (nl.length ? 14 + nl.length * 38 : 0) + 30;
+  box(P, y, CW, h3, 22, CREAM);
+  x.fillStyle = INK; x.font = '800 30px "Baloo 2", sans-serif'; rl.forEach((l, i) => x.fillText(l, P + 32, y + 30 + i * 40));
+  x.fillStyle = MUTED; x.font = '600 28px "Nunito", sans-serif'; nl.forEach((l, i) => x.fillText(l, P + 32, y + 30 + rl.length * 40 + 14 + i * 38));
+  y += h3 + P;
+
+  const out = document.createElement("canvas"); out.width = W; out.height = Math.min(y, cv.height);
+  out.getContext("2d").drawImage(cv, 0, 0);
+  return await new Promise((res, rej) => out.toBlob(b => b ? res(b) : rej(new Error("Nem sikerült elkészíteni a képet.")), "image/jpeg", 0.9));
+}
 async function zipAll(){
   if (!window.JSZip) await new Promise((res, rej) => {
     const sc = document.createElement("script");
@@ -815,16 +909,13 @@ async function zipAll(){
   });
   const zip = new JSZip(); let n = 0;
   for (const t of S.teams.filter(x => x.has_photo)) {
-    const d = await rpc("kg_host_photo", {p_host: getSess().token, p_team_no: t.no});
-    if (d) { zip.file(`csapat-${t.no}.jpg`, d.split(",")[1], {base64: true}); n++; }
+    const d = await hostPhotoData(t);
+    zip.file(`csapat-${t.no}-feladvanylap.jpg`, await sheetBlob(t));
+    zip.file(`csapat-${t.no}-foto.jpg`, d.split(",")[1], {base64: true}); n++;
   }
   if (!n) throw new Error("Még nincs feltöltött fotó.");
-  const blob = await zip.generateAsync({type: "blob"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = `shot-analizis-${S.game.code}-fotok.zip`;
-  document.body.appendChild(a); a.click();
-  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 3000);
-  toast(`${n} fotó letöltve.`);
+  saveBlob(await zip.generateAsync({type: "blob"}), `shot-analizis-${S.game.code}.zip`);
+  toast(`${n} csapat feladványlapja és fotója letöltve.`);
 }
 
 /* actions */
@@ -918,6 +1009,7 @@ app.addEventListener("click", async e => {
     case "h-pause": hostAct("kg_host_pause", {}); break;
     case "h-new": setSess(null); S = null; ui.hostTab = "new"; ui.confirm = null; ui.err = ""; draw(); break;
     case "h-zip": run(zipAll); break;
+    case "h-sheet": { const t = S.teams.find(x => x.no === +b.dataset.no); run(async () => { saveBlob(await sheetBlob(t), `shot-analizis-${S.game.code}-csapat-${t.no}.jpg`); toast("Feladványlap letöltve."); }); break; }
     case "h-logout": setSess(null); S = null; draw(); break;
   }
 });
