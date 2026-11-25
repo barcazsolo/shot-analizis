@@ -356,6 +356,13 @@ body{background:radial-gradient(60% 16% at 8% 20%,#bfdb9f 0 70%,transparent 71%)
 .nextbar .btn{animation:softBeat 1.6s ease-in-out infinite}
 .snd{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;border:2px solid var(--line);background:var(--raise);color:var(--ink);cursor:pointer;box-shadow:2px 2px 0 var(--line);flex:none;padding:0}
 .snd[aria-pressed="true"]{background:var(--brass)}
+.rank.flip li{animation:none!important;position:relative;background:var(--raise);will-change:transform}
+.rank li.me{background:#fde3b0!important;border-radius:10px;padding-inline:8px}
+.rank li.up{z-index:2;background:#e3f4e3}
+.mv{font-style:normal;margin-left:3px;font-size:.7rem;color:var(--ok);font-weight:800}
+.rank li.up .rk{width:auto;min-width:2.2em}
+.gain{font-family:var(--f-m);font-weight:800;font-size:.85rem;color:var(--ok);opacity:0;transform:translateY(8px) scale(.8);transition:opacity .35s,transform .35s cubic-bezier(.2,.9,.3,1.5)}
+.gain.show{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -520,6 +527,7 @@ const sfx = {
   wrong: () => { tone(220, .28, "sawtooth", .12); tone(165, .4, "sawtooth", .12, .18); },
   reveal: () => { for (let i = 0; i < 10; i++) tone(150 + i * 25, .05, "square", .06, i * .045); tone(784, .5, "triangle", .28, .5); tone(1047, .6, "triangle", .2, .62); },
   drum: () => { for (let i = 0; i < 14; i++) tone(90 + (i % 2) * 15, .06, "triangle", .2, i * .065); tone(1047, .5, "triangle", .25, .95); },
+  swoosh: () => [392, 523, 659, 784, 1047].forEach((f, i) => tone(f, .08, "sine", .13, i * .04)),
   fanfare: () => [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i === 5 ? .9 : .2, "triangle", .28, i * .16))
 };
 const reduced = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
@@ -538,10 +546,8 @@ function boom(kind){
 function countUps(){
   if (reduced()) return;
   document.querySelectorAll("[data-countup]").forEach(el => {
-    const to = +el.dataset.countup; if (!to) return;
-    const t0 = performance.now(), d = 1200;
-    const step = n => { const k = Math.min(1, (n - t0) / d), e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(Math.round(to * e)); if (k < 1) requestAnimationFrame(step); };
-    el.textContent = "0"; requestAnimationFrame(step);
+    const to = +el.dataset.countup, from = +(el.dataset.from || 0); if (!to || to === from) return;
+    el.textContent = fmt(from); tween(el, from, to, 1200);
   });
 }
 const SND_ON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 8.5a4.5 4.5 0 0 1 0 7M18.5 6a8 8 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -620,7 +626,6 @@ function fxTick(g, t){
   }
 }
 function onEnter(){
-  countUps();
   if (!S || !S.game) return;
   const st = S.game.status, ph = qphase();
   if (st === "question" && ph === "vote") sfx.go();
@@ -673,7 +678,7 @@ function autoReveal(){
   }
 }
 function afterRender(entered){
-  if (entered) setTimeout(onEnter, 30);
+  if (entered) { countUps(); armBoards(); setTimeout(onEnter, 30); }
   markSeen();
   const q = document.getElementById("qr");
   if (q && S && window.QRCode) {
@@ -698,17 +703,63 @@ function countsHTML(opts, counts, ans, mine){
 }
 function boardHTML(n){
   const b = S.board; if (!b) return "";
+  const flip = S.game.status === "reveal" ? " flip" : "", me = S.me && S.me.nick;
+  const row = (key, prev, score, inner, i, cls = "") => `<li class="${cls}" data-k="${esc(key)}" data-prev="${prev ?? score}" data-score="${score}"><span class="rk">${i + 1}.</span>${inner}<span class="gain"></span><b class="sc">${fmt(score)}</b></li>`;
   return `<div class="boards">
     <section class="card"><h2 class="h">Csapatok <small>átlagpont / fő</small></h2>
-      <ol class="rank">${b.teams.map((t, i) => `<li><span class="rk">${i + 1}.</span>${teamChip(t.no)}<span class="rn hint">${t.members} fő</span><b>${fmt(t.avg)}</b></li>`).join("") || `<li class="hint">Még nincs pont.</li>`}</ol></section>
+      <ol class="rank${flip}">${b.teams.map((t, i) => row("t" + t.no, t.prev, t.avg, `${teamChip(t.no)}<span class="rn hint">${t.members} fő</span>`, i, S.team && S.team.no === t.no ? "me" : "")).join("") || `<li class="hint">Még nincs pont.</li>`}</ol></section>
     <section class="card"><h2 class="h">Legjobb játékosok</h2>
-      <ol class="rank">${b.players.slice(0, n).map((p, i) => `<li><span class="rk">${i + 1}.</span><span class="rn">${esc(p.nick)}</span>${teamChip(p.team_no)}<b>${fmt(p.score)}</b></li>`).join("") || `<li class="hint">Még nincs játékos.</li>`}</ol></section>
+      <ol class="rank${flip}">${b.players.slice(0, n).map((p, i) => row("p" + p.nick, p.prev, p.score, `<span class="rn">${esc(p.nick)}</span>${teamChip(p.team_no)}`, i, p.nick === me ? "me" : "")).join("") || `<li class="hint">Még nincs játékos.</li>`}</ol></section>
   </div>`;
+}
+function tween(el, from, to, d){
+  const t0 = performance.now();
+  const step = n => { const k = Math.min(1, (n - t0) / d), e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(Math.round(from + (to - from) * e)); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function armBoards(){
+  if (reduced()) return;
+  document.querySelectorAll(".rank.flip").forEach(ol => {
+    const rows = [...ol.querySelectorAll("li[data-k]")];
+    if (!rows.length || rows.every(r => +r.dataset.prev === +r.dataset.score)) return;
+    const prevOrder = rows.slice().sort((a, b) => (+b.dataset.prev) - (+a.dataset.prev) || a.dataset.k.localeCompare(b.dataset.k));
+    const tops = rows.map(r => r.offsetTop);
+    rows.forEach((r, i) => {
+      const pi = prevOrder.indexOf(r);
+      r.style.transition = "none";
+      r.style.transform = `translateY(${tops[pi] - tops[i]}px)`;
+      r.querySelector(".sc").textContent = fmt(+r.dataset.prev);
+      r.querySelector(".rk").textContent = (pi + 1) + ".";
+    });
+    const go = () => {
+      rows.forEach(r => {
+        const from = +r.dataset.prev, to = +r.dataset.score, g = r.querySelector(".gain");
+        if (to > from) { g.textContent = "+" + fmt(to - from); g.classList.add("show"); }
+        tween(r.querySelector(".sc"), from, to, 900);
+      });
+      setTimeout(() => {
+        let moved = false;
+        rows.forEach((r, i) => {
+          const d = prevOrder.indexOf(r) - i;
+          r.style.transition = "transform .85s cubic-bezier(.2,.9,.3,1.15), background-color .4s";
+          r.style.transform = "";
+          r.querySelector(".rk").innerHTML = (i + 1) + "." + (d > 0 ? `<i class="mv">▲${d}</i>` : "");
+          if (d > 0) { r.classList.add("up"); moved = true; }
+          else if (d < 0) { r.classList.add("down"); moved = true; }
+        });
+        if (moved) sfx.swoosh();
+      }, 1050);
+    };
+    if ("IntersectionObserver" in window) {
+      const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io.disconnect(); setTimeout(go, 350); } }, {threshold: .3});
+      io.observe(ol);
+    } else setTimeout(go, 1500);
+  });
 }
 function podiumHTML(){
   const p = (S.board && S.board.players) || [];
   const order = [p[1], p[0], p[2]];
-  return `<div class="podium">${order.map((x, i) => x ? `<div class="pod"><span class="nm">${esc(x.nick)}</span><small>${fmt(x.score)} pont</small><div class="blk">${[2, 1, 3][i]}</div></div>` : `<div class="pod"></div>`).join("")}</div>`;
+  return `<div class="podium">${order.map((x, i) => x ? `<div class="pod"><span class="nm">${esc(x.nick)}</span><small><span data-countup="${x.score}">${fmt(x.score)}</span> pont</small><div class="blk">${[2, 1, 3][i]}</div></div>` : `<div class="pod"></div>`).join("")}</div>`;
 }
 function rulesHTML(){
   return `<details class="card rules"><summary>Hogyan megy a játék, és hogyan jár a pont?</summary>
@@ -758,11 +809,12 @@ function joinTeamsHTML(){
   ${ui.err ? `<p class="err">${esc(ui.err)}</p>` : ""}
   <button class="btn ghost" data-act="join-back">Vissza</button>`;
 }
+function myGain(){ const r = S.round; if (!r || !r.reveal || S.game.status !== "reveal") return 0; return (r.reveal.points || 0) + (r.reveal.bonus || 0) + (r.own ? (r.reveal.pose_points || 0) : 0); }
 function topbarHTML(){
   const m = S.me;
   return `<header class="top"><span class="brand">DESzKA <em>túra</em></span>
     <span class="who">${sndBtn()}<b>${esc(m.nick)}</b>${S.team ? teamChip(S.team.no) : `<span class="pill">Beosztásra vár</span>`}</span>
-    <span class="pts"><b>${fmt(m.score)}</b> pont${m.rank ? ` · ${m.rank}. hely` : ""}${m.streak > 1 ? ` · <span class="streak">${m.streak}-es sorozat</span>` : ""}</span></header>`;
+    <span class="pts"><b${myGain() ? ` data-countup="${m.score}" data-from="${m.score - myGain()}"` : ""}>${fmt(m.score)}</b> pont${m.rank ? ` · ${m.rank}. hely` : ""}${m.streak > 1 ? ` · <span class="streak">${m.streak}-es sorozat</span>` : ""}</span></header>`;
 }
 function lobbyHTML(){
   return `<section class="card center" style="padding-block:28px">
