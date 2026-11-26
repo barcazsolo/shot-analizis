@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>DESzKA túra</title>
 <meta name="description" content="Élőkép-játék a szakkolis kocsmatúrára">
-<meta name="theme-color" content="#cfe6b4">
+<meta name="theme-color" content="#1b4636">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik+Dirt&family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap">
 <style>
 /* Pop-art gallery party: ultramarine wall, sunflower and pink accents, golden frames, white wall cards. Phone first, one column; the host view opens to a grid. */
 :root{
@@ -383,6 +383,81 @@ body{background:radial-gradient(60% 16% at 8% 20%,#bfdb9f 0 70%,transparent 71%)
 .enter .bigrank{animation:popIn .8s cubic-bezier(.2,.9,.3,1.4) .2s both}
 .gainbig{font-family:var(--f-m);font-weight:800;font-size:1.4rem;color:var(--ok)}
 .streakbig{font-weight:800;color:var(--brass-dim)}
+
+/* IKSZ Connect look: grey ground, white square cards with hairline borders, deep-green feature blocks, amber actions with a black corner notch, Montserrat throughout. */
+:root{--wall:#eff1f0;--deep:#f6f7f6;--raise:#ffffff;--line:#1b4636;--brass:#f3b13d;--brass-dim:#a86d07;--paper:#ffffff;--ink:#1b4636;--ink-soft:#5d6863;--text:#18221d;--muted:#5d6863;--ok:#2f9e4f;--bad:#d64541;--rule:#dde1df;--hair:#dde1df;--green:#1b4636;--shadow:none;
+  --title:"Montserrat",system-ui,sans-serif;--f-d:"Montserrat",system-ui,sans-serif;--f-b:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;--f-m:"Montserrat",system-ui,sans-serif}
+body{background:var(--wall);color:var(--text);font-weight:500}
+.title,.brand{font-family:var(--title);font-weight:800;letter-spacing:-.025em;color:var(--ink)}
+.title em,.brand em{font-style:normal;font-weight:800;color:var(--ink)}
+.hero .title{animation:none}
+.research{color:var(--muted);font-weight:700}
+.research b{color:var(--ink)}
+.eyebrow{background:none;border:0;border-radius:0;padding:0;color:var(--muted);font-weight:700;letter-spacing:.14em;font-size:.76rem}
+.h{font-weight:800;letter-spacing:-.01em}
+.card,.paper,.hteam,.joinbox,.orig,.teamno,.mecard,.tabs2,.counts li,.sbl li,.opt,.tp{border-radius:0;box-shadow:none}
+.card,.paper,.hteam,.orig{border:1px solid var(--hair);background:#fff}
+.paper{border-left:6px solid var(--brass)}
+.paper-head{border-bottom:1px solid var(--hair)}
+.top{border-bottom:1px solid var(--hair)}
+.btn{border-radius:0;border:0;box-shadow:none;font-weight:800;position:relative;letter-spacing:-.005em}
+.btn:active{transform:translateY(1px);box-shadow:none}
+.btn.primary{background:var(--brass);color:var(--ink)}
+.btn.primary::after{content:"";position:absolute;top:0;right:0;border-style:solid;border-width:0 14px 14px 0;border-color:transparent #111 transparent transparent}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--hair)}
+.field input,.field select{border-radius:0;border:1px solid var(--hair);background:#fff;color:var(--text)}
+.field input:focus,.field select:focus{outline:2px solid var(--brass);outline-offset:0}
+.chip{border-radius:0;border:0;background:color-mix(in srgb,var(--tc) 38%,#fff);color:var(--ink);font-weight:700}
+.chip::before{border:0;border-radius:0}
+.pill{border-radius:0;border:1px solid var(--hair);background:#fff;color:var(--ink)}
+.pill.ok{background:#dcefe1;border-color:#b9dcc2}
+.teamno,.mecard,.joinbox{background:var(--green);color:#fff;border:0}
+.teamno .eyebrow,.mecard .eyebrow{background:#aab6f0;color:#1d2b5c;padding:4px 10px;letter-spacing:.1em}
+.teamno p,.mecard p,.mecard .hint,.joinbox .hint,.joinbox .eyebrow{color:#d6e4dc}
+.teamno b{border-radius:0;border:0;box-shadow:none;background:var(--tc);color:var(--ink)}
+.bigrank,.joinbox .code{color:#fff}
+.mecard .gainbig,.mecard .streakbig{color:var(--brass)}
+.mecard b{color:#fff}
+.qr{border:0;border-radius:0;background:#fff}
+.gilt{background:var(--green);border:0;border-radius:0;box-shadow:none;padding:8px}
+.gilt img{border:0;border-radius:0}
+.bar{border:0;border-radius:0;background:#dde1df;height:10px}
+.bar i{background:var(--brass)}
+.opt{border:1px solid var(--hair);background:#fff}
+.opt img{border-radius:0}
+.opt.picked{box-shadow:0 0 0 4px var(--brass)}
+.letter{border-radius:0;border:0;background:var(--green);color:#fff}
+.banner{border:0!important;border-radius:0;box-shadow:none;color:#fff}
+.banner span{color:#eef5f0}
+.banner.ok{background:var(--ok)}
+.banner.bad{background:var(--bad)}
+.banner.own{background:var(--green)}
+.orig{border-left:6px solid var(--ok)}
+.tag{color:var(--ok)}
+.counts li{border:1px solid var(--hair);background:#fff}
+.counts li.ok{background:#e4f3e7}
+.counts img{border:0;border-radius:0}
+.cbar{border:0;border-radius:0;background:#e6e9e7}
+.cbar i{background:#9aa5a0}
+.rank li{border-bottom:1px solid var(--hair)}
+.rank li.me{background:#fdf0d3!important;border-radius:0}
+.rank li.up{background:#e4f3e7}
+.sb-title{font-weight:800;letter-spacing:-.03em}
+.sbl li{border:1px solid var(--hair);background:#fff}
+.sbl li::before{background:color-mix(in srgb,var(--tc) 45%,#fff)}
+.sbl li.me{outline:3px solid var(--brass);outline-offset:-3px}
+.pod .blk{border-radius:0;border:0;background:var(--green);color:#fff}
+.pod:nth-child(2) .blk{background:var(--brass);color:var(--ink)}
+.tabs2{background:#fff;border:1px solid var(--hair);padding:0;gap:0}
+.tabs2 button{border-radius:0;padding:12px 20px}
+.tabs2 button[aria-pressed="true"]{background:var(--green);color:#fff}
+.hteam{border-top:6px solid var(--tc)}
+.hthumb,.thumb{border:0;border-radius:0;background:var(--deep)}
+.snd{border-radius:0;box-shadow:none;border:1px solid var(--hair);background:#fff}
+.snd[aria-pressed="true"]{background:var(--brass);border-color:var(--brass)}
+.nextbar{background:#fff;border-top:1px solid var(--hair)}
+.count b.pop::after{border-color:var(--brass);border-radius:0}
+#toast{background:var(--green);color:#fff;border-radius:0}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -454,7 +529,7 @@ const ART = {
   66:["Leonardo da Vinci","Hölgy hermelinnel","1489–91"],
   109:["Johannes Vermeer","Leány gyöngy fülbevalóval","1665 k."]
 };
-const COLORS = ["#f5a524","#7cc36f","#f28b82","#5bb8d6","#c39bd3","#f6d55c","#e9875a","#9ad1b5","#f4b6c2","#b5c96a"];
+const COLORS = ["#f3b13d","#7fb88f","#e88a7d","#6fa8d6","#aab6f0","#e9d36a","#d98b5f","#8fcfbf","#e7a6bd","#b9c97a"];
 const SUFFIX = {1:"es",2:"es",3:"as",4:"es",5:"ös",6:"os",7:"es",8:"as",9:"es",10:"es"};
 const STATUS = {open:"Beállás", question:"Tippelés", reveal:"Eredmény", final:"Vége"};
 const L = "ABCD";
@@ -554,7 +629,7 @@ const sfx = {
   fanfare: () => [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i === 5 ? .9 : .2, "triangle", .28, i * .16))
 };
 const reduced = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
-const CONF = ["#f5a524", "#7cc36f", "#f28b82", "#5bb8d6", "#f6d55c", "#1e4a2c"];
+const CONF = ["#f3b13d", "#1b4636", "#aab6f0", "#7fb88f", "#ffffff"];
 function boom(kind){
   if (!window.confetti || reduced()) return;
   if (kind === "big") {
@@ -708,7 +783,7 @@ function afterRender(entered){
   markSeen();
   const q = document.getElementById("qr");
   if (q && S && window.QRCode) {
-    try { new QRCode(q, {text: joinUrl(), width: 264, height: 264, colorDark: "#1e4a2c", colorLight: "#fdf8e7", correctLevel: QRCode.CorrectLevel.M}); } catch (e) {}
+    try { new QRCode(q, {text: joinUrl(), width: 264, height: 264, colorDark: "#1b4636", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M}); } catch (e) {}
   }
   if (S && S.round && S.round.options) S.round.options.forEach(id => { const i = new Image(); i.src = pimg(id); });
 }
@@ -1122,8 +1197,8 @@ function wrapLines(x, text, maxW){
   if (cur) out.push(cur); return out;
 }
 async function sheetBlob(t){
-  try { await Promise.all(['96px "Rubik Dirt"', '800 34px "Baloo 2"', '700 28px "Baloo 2"', '600 34px "Nunito"', '500 24px "Nunito"'].map(f => document.fonts.load(f))); } catch (e) {}
-  const INK = "#1e4a2c", CREAM = "#fdf8e7", PALE = "#eaf3dc", GREEN = "#cfe6b4", ORANGE = "#f5a524", OK = "#2f9e4f", MUTED = "#56705f";
+  try { await Promise.all(['800 88px "Montserrat"', '700 34px "Montserrat"', '600 30px "Montserrat"', '500 24px "Montserrat"'].map(f => document.fonts.load(f))); } catch (e) {}
+  const INK = "#1b4636", CREAM = "#ffffff", PALE = "#f6f7f6", GREEN = "#eff1f0", ORANGE = "#f3b13d", OK = "#2f9e4f", MUTED = "#5d6863";
   const W = 1080, P = 60, CW = W - 2 * P;
   const cv = document.createElement("canvas"); cv.width = W; cv.height = 3600;
   const x = cv.getContext("2d"); x.textBaseline = "top";
@@ -1131,16 +1206,16 @@ async function sheetBlob(t){
     x.fillStyle = INK; rr(x, X + sh, Y + sh, w, h, r); x.fill();
     x.fillStyle = fill; rr(x, X, Y, w, h, r); x.fill(); x.lineWidth = lw; x.strokeStyle = stroke; x.stroke();
   };
-  const pill = (text, X, Y, fill, font = '800 26px "Baloo 2", sans-serif') => {
+  const pill = (text, X, Y, fill, font = '800 26px "Montserrat", sans-serif') => {
     x.font = font; const w = x.measureText(text).width + 36;
     box(X, Y, w, 46, 23, fill, INK, 3, 0); x.fillStyle = INK; x.fillText(text, X + 18, Y + 8); return w;
   };
   x.fillStyle = GREEN; x.fillRect(0, 0, W, cv.height);
   let y = P;
-  x.fillStyle = INK; x.font = '96px "Rubik Dirt", "Baloo 2", Impact, sans-serif'; x.fillText("DESzKA túra", P, y); y += 112;
-  x.font = '800 32px "Baloo 2", sans-serif'; x.fillStyle = "#d86f00"; x.fillText("élőkép-játék a", P, y);
+  x.fillStyle = INK; x.font = '800 88px "Montserrat", sans-serif'; x.fillText("DESzKA túra", P, y); y += 112;
+  x.font = '800 32px "Montserrat", sans-serif'; x.fillStyle = MUTED; x.fillText("élőkép-játék a", P, y);
   const rw = x.measureText("élőkép-játék a ").width; x.fillStyle = INK; x.fillText("kocsmatúrára", P + rw, y); y += 70;
-  x.font = '800 36px "Baloo 2", sans-serif';
+  x.font = '800 36px "Montserrat", sans-serif';
   const label = `${t.no}. csapat képe`, lw = x.measureText(label).width + 56;
   box(P, y, lw, 64, 32, COLORS[(t.no - 1) % 10], INK, 4, 4); x.fillStyle = INK; x.fillText(label, P + 28, y + 10); y += 100;
 
@@ -1151,15 +1226,15 @@ async function sheetBlob(t){
   x.drawImage(ph, fx + 18, y + 18, dw, dh); x.lineWidth = 4; x.strokeStyle = INK; x.strokeRect(fx + 18, y + 18, dw, dh);
   y += dh + 36 + 50;
 
-  x.font = '600 34px "Nunito", sans-serif';
+  x.font = '600 34px "Montserrat", sans-serif';
   const lines = wrapLines(x, t.description, CW - 64), dh2 = 30 + 46 + 24 + lines.length * 50 + 30;
   box(P, y, CW, dh2, 22, CREAM);
   pill("A FELADVÁNY", P + 30, y + 30, ORANGE);
-  x.fillStyle = INK; x.font = '600 34px "Nunito", sans-serif';
+  x.fillStyle = INK; x.font = '600 34px "Montserrat", sans-serif';
   lines.forEach((l, i) => x.fillText(l, P + 32, y + 30 + 46 + 24 + i * 50));
   y += dh2 + 50;
 
-  x.fillStyle = INK; x.font = '800 40px "Baloo 2", sans-serif'; x.fillText("Melyik volt az eredeti?", P, y); y += 66;
+  x.fillStyle = INK; x.font = '800 40px "Montserrat", sans-serif'; x.fillText("Melyik volt az eredeti?", P, y); y += 66;
   const gap = 30, cw = (CW - gap) / 2, imgH = 330, cellH = 16 + imgH + 18 + 2 * 34 + 32 + 22;
   const imgs = await Promise.all(t.options.map(id => loadImg(pimg(id))));
   t.options.forEach((id, i) => {
@@ -1169,25 +1244,25 @@ async function sheetBlob(t){
     const im = imgs[i], kk = Math.min((cw - 32) / im.naturalWidth, imgH / im.naturalHeight), iw = im.naturalWidth * kk, ih = im.naturalHeight * kk;
     x.drawImage(im, cx + 16 + (cw - 32 - iw) / 2, cy + 16 + (imgH - ih) / 2, iw, ih);
     x.fillStyle = ORANGE; x.beginPath(); x.arc(cx + 34, cy + 34, 30, 0, Math.PI * 2); x.fill(); x.lineWidth = 4; x.strokeStyle = INK; x.stroke();
-    x.fillStyle = INK; x.font = '800 36px "Baloo 2", sans-serif'; x.textAlign = "center"; x.fillText(L[i], cx + 34, cy + 14); x.textAlign = "left";
-    if (ok) { x.font = '800 26px "Baloo 2", sans-serif'; const tw = x.measureText("EREDETI ✓").width + 32; x.fillStyle = OK; rr(x, cx + cw - tw - 20, cy + 22, tw, 44, 22); x.fill(); x.fillStyle = "#ffffff"; x.fillText("EREDETI ✓", cx + cw - tw - 4, cy + 29); }
-    x.fillStyle = INK; x.font = '700 28px "Baloo 2", sans-serif';
+    x.fillStyle = INK; x.font = '800 36px "Montserrat", sans-serif'; x.textAlign = "center"; x.fillText(L[i], cx + 34, cy + 14); x.textAlign = "left";
+    if (ok) { x.font = '800 26px "Montserrat", sans-serif'; const tw = x.measureText("EREDETI ✓").width + 32; x.fillStyle = OK; rr(x, cx + cw - tw - 20, cy + 22, tw, 44, 22); x.fill(); x.fillStyle = "#ffffff"; x.fillText("EREDETI ✓", cx + cw - tw - 4, cy + 29); }
+    x.fillStyle = INK; x.font = '700 28px "Montserrat", sans-serif';
     let tl = wrapLines(x, a[1], cw - 36);
     if (tl.length > 2) { tl = tl.slice(0, 2); while (x.measureText(tl[1] + "…").width > cw - 36 && tl[1].length) tl[1] = tl[1].slice(0, -1); tl[1] += "…"; }
     tl.forEach((l, j) => x.fillText(l, cx + 18, cy + 16 + imgH + 18 + j * 34));
-    x.fillStyle = MUTED; x.font = '500 24px "Nunito", sans-serif'; x.fillText(`${a[0]}, ${a[2]}`, cx + 18, cy + 16 + imgH + 18 + 2 * 34 + 4);
+    x.fillStyle = MUTED; x.font = '500 24px "Montserrat", sans-serif'; x.fillText(`${a[0]}, ${a[2]}`, cx + 18, cy + 16 + imgH + 18 + 2 * 34 + 4);
   });
   y += 2 * cellH + gap + 50;
 
   const names = t.members.map(m => m.nick).join(", ");
-  x.font = '600 28px "Nunito", sans-serif';
+  x.font = '600 28px "Montserrat", sans-serif';
   const nl = names ? wrapLines(x, "Csapat: " + names, CW - 64) : [];
   const res = t.played ? `${t.correct_count} / ${t.eligible_count} másik játékos találta el · +${fmt(t.pose_points)} pont csapattagonként` : "Erre a képre még nem tippeltek.";
-  x.font = '800 30px "Baloo 2", sans-serif';
+  x.font = '800 30px "Montserrat", sans-serif';
   const rl = wrapLines(x, res, CW - 64), h3 = 30 + rl.length * 40 + (nl.length ? 14 + nl.length * 38 : 0) + 30;
   box(P, y, CW, h3, 22, CREAM);
-  x.fillStyle = INK; x.font = '800 30px "Baloo 2", sans-serif'; rl.forEach((l, i) => x.fillText(l, P + 32, y + 30 + i * 40));
-  x.fillStyle = MUTED; x.font = '600 28px "Nunito", sans-serif'; nl.forEach((l, i) => x.fillText(l, P + 32, y + 30 + rl.length * 40 + 14 + i * 38));
+  x.fillStyle = INK; x.font = '800 30px "Montserrat", sans-serif'; rl.forEach((l, i) => x.fillText(l, P + 32, y + 30 + i * 40));
+  x.fillStyle = MUTED; x.font = '600 28px "Montserrat", sans-serif'; nl.forEach((l, i) => x.fillText(l, P + 32, y + 30 + rl.length * 40 + 14 + i * 38));
   y += h3 + P;
 
   const out = document.createElement("canvas"); out.width = W; out.height = Math.min(y, cv.height);
