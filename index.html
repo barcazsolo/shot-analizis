@@ -998,7 +998,7 @@ function renderHost(){
     ${assignHTML()}
     ${S.teams.length ? `<section style="display:grid;gap:12px"><h2 class="h">Csapatok</h2><div class="hteams">${S.teams.map(hostTeamHTML).join("")}</div></section>` : ""}
     ${boardHTML(10)}
-    <section class="card hctl">${ctl}${S.teams.some(t => t.has_photo) ? `<button class="btn ghost" data-act="h-zip" ${ui.busy ? "disabled" : ""}>${ui.busy ? "Készül…" : "Összes feladványlap letöltése (ZIP)"}</button>` : ""}${ui.confirm === "newgame" ? `<span>Új játékot kezdesz? A mostani lezárul, és mindenkinek újra be kell lépnie.</span><button class="btn primary" data-act="h-new">Igen, új játék</button><button class="btn ghost" data-act="confirm-no">Mégse</button>` : `<button class="btn ghost" data-act="ask" data-what="newgame">Új játék indítása</button>`}<button class="linkbtn" data-act="h-logout">Kilépés a szervezői nézetből</button></section>`;
+    <section class="card hctl">${ctl}${S.teams.some(t => t.has_photo) ? `<button class="btn ghost" data-act="h-zip" ${ui.busy ? "disabled" : ""}>${ui.busy ? "Készül…" : "Összes feladványlap letöltése (ZIP)"}</button>` : ""}${ui.confirm === "newgame" ? `<span>Új játékot kezdesz? A mostani lezárul, és mindenkinek újra be kell lépnie.</span><button class="btn primary" data-act="h-new">Igen, új játék</button><button class="btn ghost" data-act="confirm-no">Mégse</button>` : `<button class="btn ghost" data-act="ask" data-what="newgame">Új játék indítása</button>`}<button class="btn ghost" data-act="h-old">Korábbi játékok</button><button class="linkbtn" data-act="h-logout">Kilépés a szervezői nézetből</button></section>`;
 }
 function runHTML(){
   if (!S.teams.length || S.game.status === "final") return "";
@@ -1307,6 +1307,7 @@ app.addEventListener("click", async e => {
         ui.games = null; ui.hpw = null; setSess({token: r.host_token, code: r.code}); await poll();
       }); break;
     case "h-games-back": ui.games = null; ui.hpw = null; ui.err = ""; draw(); break;
+    case "h-old": setSess(null); S = null; ui.hostTab = "login"; ui.games = null; ui.err = ""; draw(); break;
     case "h-logout": setSess(null); S = null; draw(); break;
   }
 });
